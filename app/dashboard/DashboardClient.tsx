@@ -100,11 +100,16 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
   const mcatPercent =
     mcatTierStatus === 'Strong' ? 100 : mcatTierStatus === 'Competitive' ? 82 : mcatTierStatus === 'Developing' ? 62 : mcatTierStatus === 'Needs Work' ? 38 : 15;
 
-  const confirmedLetters = logs.filter(
+  const baselineExtracurriculars = toNumber(inputs.extracurriculars);
+  const baselineLetters = toNumber(inputs.lettersOfRec);
+  const loggedExtracurriculars = logs.filter((log) => log.category === 'extracurriculars').length;
+  const loggedConfirmedLetters = logs.filter(
     (log) =>
       log.category === 'letters-of-recommendation' &&
       (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
   ).length;
+  const totalExtracurriculars = baselineExtracurriculars + loggedExtracurriculars;
+  const confirmedLetters = baselineLetters + loggedConfirmedLetters;
 
   const clinicalStatus: CategoryBar['status'] =
     totalClinical >= 500 ? 'Strong' : totalClinical >= 200 ? 'Competitive' : totalClinical >= 100 ? 'Developing' : totalClinical >= 50 ? 'Needs Work' : 'Critical';
@@ -117,9 +122,8 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
   const leadershipStatus: CategoryBar['status'] =
     totalLeadership >= 3 ? 'Strong' : totalLeadership >= 2 ? 'Competitive' : totalLeadership >= 1 ? 'Developing' : 'Critical';
 
-  const extracurricularCount = logs.filter((log) => log.category === 'extracurriculars').length;
   const extracurricularStatus: CategoryBar['status'] =
-    extracurricularCount >= 4 ? 'Strong' : extracurricularCount >= 3 ? 'Competitive' : extracurricularCount >= 2 ? 'Developing' : extracurricularCount >= 1 ? 'Needs Work' : 'Critical';
+    totalExtracurriculars >= 4 ? 'Strong' : totalExtracurriculars >= 3 ? 'Competitive' : totalExtracurriculars >= 2 ? 'Developing' : totalExtracurriculars >= 1 ? 'Needs Work' : 'Critical';
 
   const lettersStatus: CategoryBar['status'] =
     confirmedLetters >= 5 ? 'Strong' : confirmedLetters >= 4 ? 'Competitive' : confirmedLetters >= 3 ? 'Developing' : confirmedLetters >= 2 ? 'Needs Work' : 'Critical';
@@ -159,15 +163,15 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
     },
     {
       label: 'Extracurriculars',
-      percent: smoothFill(extracurricularCount, 4),
+      percent: smoothFill(totalExtracurriculars, 4),
       status: extracurricularStatus,
-      baselinePercent: 0,
+      baselinePercent: smoothFill(baselineExtracurriculars, 4),
     },
     {
       label: 'Letters of Recommendation',
       percent: smoothFill(confirmedLetters, 5),
       status: lettersStatus,
-      baselinePercent: 0,
+      baselinePercent: smoothFill(baselineLetters, 5),
     },
   ] as CategoryBar[];
 }
@@ -189,6 +193,8 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
       volunteeringHours: toValue(searchParams.volunteeringHours),
       researchHours: toValue(searchParams.researchHours),
       leadershipExperiences: toValue(searchParams.leadershipExperiences),
+      extracurriculars: toValue(searchParams.extracurriculars),
+      lettersOfRec: toValue(searchParams.lettersOfRec),
       mcatStatus: toValue(searchParams.mcatStatus),
       mcatScore: toValue(searchParams.mcatScore),
     }),

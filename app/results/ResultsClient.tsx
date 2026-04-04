@@ -14,6 +14,8 @@ type SearchParams = {
   volunteeringHours?: string;
   researchHours?: string;
   leadershipExperiences?: string;
+  extracurriculars?: string;
+  lettersOfRec?: string;
   mcatStatus?: string;
   mcatScore?: string;
   targetApplicationYear?: string;
@@ -61,6 +63,8 @@ function generateReport(params: SearchParams) {
   const volunteering = toNumber(params.volunteeringHours);
   const research = toNumber(params.researchHours);
   const leadership = toNumber(params.leadershipExperiences);
+  const extracurriculars = toNumber(params.extracurriculars);
+  const lettersOfRec = toNumber(params.lettersOfRec);
   const mcatStatus = params.mcatStatus ?? 'Planning';
   const mcatScore = toNumber(params.mcatScore);
 
@@ -81,19 +85,22 @@ function generateReport(params: SearchParams) {
     research >= 400 ? 'Strong' : research >= 200 ? 'Competitive' : research >= 100 ? 'Developing' : research >= 50 ? 'Needs Work' : 'Critical';
   const leadershipTier =
     leadership >= 3 ? 'Strong' : leadership >= 2 ? 'Competitive' : leadership >= 1 ? 'Developing' : 'Critical';
+  const extracurricularsTier =
+    extracurriculars >= 4 ? 'Strong' : extracurriculars >= 3 ? 'Competitive' : extracurriculars >= 2 ? 'Developing' : extracurriculars >= 1 ? 'Needs Work' : 'Critical';
+  const lettersOfRecTier =
+    lettersOfRec >= 5 ? 'Strong' : lettersOfRec >= 4 ? 'Competitive' : lettersOfRec >= 3 ? 'Developing' : lettersOfRec >= 2 ? 'Needs Work' : 'Critical';
 
   // Weights: MCAT 25%, GPA 20%, Clinical 15%, LOR 10%, Research 10%, Shadowing 7%, Service 6%, Leadership 4%, Extracurriculars 3%
-  // LOR and Extracurriculars are not captured at intake so default to Critical (8)
   const score = Math.round(
     tierScore[mcatTier] * 0.25 +
     tierScore[gpaTier] * 0.20 +
     tierScore[clinicalTier] * 0.15 +
-    8 * 0.10 + // Letters of Recommendation — not in intake
+    tierScore[lettersOfRecTier] * 0.10 +
     tierScore[researchTier] * 0.10 +
     tierScore[shadowingTier] * 0.07 +
     tierScore[volunteeringTier] * 0.06 +
     tierScore[leadershipTier] * 0.04 +
-    8 * 0.03   // Extracurriculars — not in intake
+    tierScore[extracurricularsTier] * 0.03
   );
 
   const strengths: string[] = [];
@@ -281,8 +288,24 @@ function generateReport(params: SearchParams) {
         : leadership >= 1
           ? buildCategory('Leadership', 55, 'Developing')
           : buildCategory('Leadership', 15, 'Critical'),
-    buildCategory('Extracurriculars', 15, 'Critical'),
-    buildCategory('Letters of Recommendation', 15, 'Critical'),
+    extracurriculars >= 4
+      ? buildCategory('Extracurriculars', 100, 'Strong')
+      : extracurriculars >= 3
+        ? buildCategory('Extracurriculars', 80, 'Competitive')
+        : extracurriculars >= 2
+          ? buildCategory('Extracurriculars', 55, 'Developing')
+          : extracurriculars >= 1
+            ? buildCategory('Extracurriculars', 30, 'Needs Work')
+            : buildCategory('Extracurriculars', 15, 'Critical'),
+    lettersOfRec >= 5
+      ? buildCategory('Letters of Recommendation', 100, 'Strong')
+      : lettersOfRec >= 4
+        ? buildCategory('Letters of Recommendation', 80, 'Competitive')
+        : lettersOfRec >= 3
+          ? buildCategory('Letters of Recommendation', 60, 'Developing')
+          : lettersOfRec >= 2
+            ? buildCategory('Letters of Recommendation', 38, 'Needs Work')
+            : buildCategory('Letters of Recommendation', 15, 'Critical'),
   ];
 
   const tier =
@@ -322,6 +345,8 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
       volunteeringHours: toValue(searchParams.volunteeringHours),
       researchHours: toValue(searchParams.researchHours),
       leadershipExperiences: toValue(searchParams.leadershipExperiences),
+      extracurriculars: toValue(searchParams.extracurriculars),
+      lettersOfRec: toValue(searchParams.lettersOfRec),
       mcatStatus: toValue(searchParams.mcatStatus),
       mcatScore: toValue(searchParams.mcatScore),
       targetApplicationYear: toValue(searchParams.targetApplicationYear),

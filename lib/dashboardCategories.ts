@@ -15,6 +15,8 @@ export type SearchParamsInput = {
   volunteeringHours?: string;
   researchHours?: string;
   leadershipExperiences?: string;
+  extracurriculars?: string;
+  lettersOfRec?: string;
   mcatStatus?: string;
   mcatScore?: string;
 };
