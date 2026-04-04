@@ -189,17 +189,20 @@ function buildCategoryBar(inputs: SearchParamsInput | undefined, logs: ActivityL
   }
 
   if (categorySlug === 'extracurriculars') {
-    const total = logs.length;
+    const baselineExtracurriculars = toNumber(inputs.extracurriculars);
+    const total = baselineExtracurriculars + logs.length;
     const status: CategoryBar['status'] =
       total >= 4 ? 'Strong' : total >= 3 ? 'Competitive' : total >= 2 ? 'Developing' : total >= 1 ? 'Needs Work' : 'Critical';
-    return { label, percent: smoothFill(total, 4), status, baselinePercent: 0 };
+    return { label, percent: smoothFill(total, 4), status, baselinePercent: smoothFill(baselineExtracurriculars, 4) };
   }
 
   if (categorySlug === 'letters-of-recommendation') {
-    const confirmed = logs.filter((log) => log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received')).length;
+    const baselineLetters = toNumber(inputs.lettersOfRec);
+    const loggedConfirmed = logs.filter((log) => log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received')).length;
+    const confirmed = baselineLetters + loggedConfirmed;
     const status: CategoryBar['status'] =
       confirmed >= 5 ? 'Strong' : confirmed >= 4 ? 'Competitive' : confirmed >= 3 ? 'Developing' : confirmed >= 2 ? 'Needs Work' : 'Critical';
-    return { label, percent: smoothFill(confirmed, 5), status, baselinePercent: 0 };
+    return { label, percent: smoothFill(confirmed, 5), status, baselinePercent: smoothFill(baselineLetters, 5) };
   }
 
   return null;

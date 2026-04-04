@@ -320,6 +320,8 @@ export function buildCategories(params: SearchParamsInput): CategoryBar[] {
   const volunteering = toNumber(params.volunteeringHours);
   const research = toNumber(params.researchHours);
   const leadership = toNumber(params.leadershipExperiences);
+  const extracurriculars = toNumber(params.extracurriculars);
+  const lettersOfRec = toNumber(params.lettersOfRec);
   const mcatStatus = params.mcatStatus ?? 'Planning';
   const mcatScore = toNumber(params.mcatScore);
 
@@ -387,8 +389,24 @@ export function buildCategories(params: SearchParamsInput): CategoryBar[] {
         : leadership >= 1
           ? buildCategory('Leadership', 55, 'Developing')
           : buildCategory('Leadership', 15, 'Critical'),
-    buildCategory('Extracurriculars', 15, 'Critical'),
-    buildCategory('Letters of Recommendation', 15, 'Critical'),
+    extracurriculars >= 4
+      ? buildCategory('Extracurriculars', 100, 'Strong')
+      : extracurriculars >= 3
+        ? buildCategory('Extracurriculars', 80, 'Competitive')
+        : extracurriculars >= 2
+          ? buildCategory('Extracurriculars', 55, 'Developing')
+          : extracurriculars >= 1
+            ? buildCategory('Extracurriculars', 30, 'Needs Work')
+            : buildCategory('Extracurriculars', 15, 'Critical'),
+    lettersOfRec >= 5
+      ? buildCategory('Letters of Recommendation', 100, 'Strong')
+      : lettersOfRec >= 4
+        ? buildCategory('Letters of Recommendation', 80, 'Competitive')
+        : lettersOfRec >= 3
+          ? buildCategory('Letters of Recommendation', 60, 'Developing')
+          : lettersOfRec >= 2
+            ? buildCategory('Letters of Recommendation', 38, 'Needs Work')
+            : buildCategory('Letters of Recommendation', 15, 'Critical'),
   ];
 }
 
