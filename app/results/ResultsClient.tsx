@@ -565,6 +565,14 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
             <p className="text-sm text-slate-600">{params.leadershipExperiences ?? 'N/A'}</p>
           </div>
           <div>
+            <p className="text-sm font-medium text-slate-700">Extracurriculars</p>
+            <p className="text-sm text-slate-600">{params.extracurriculars ?? 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-700">Letters of Recommendation</p>
+            <p className="text-sm text-slate-600">{params.lettersOfRec ?? 'N/A'}</p>
+          </div>
+          <div>
             <p className="text-sm font-medium text-slate-700">School year</p>
             <p className="text-sm text-slate-600">{params.schoolYear ?? 'N/A'}</p>
           </div>
