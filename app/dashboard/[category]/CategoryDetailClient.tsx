@@ -132,72 +132,74 @@ function buildCategoryBar(inputs: SearchParamsInput | undefined, logs: ActivityL
   const mcatStatus = inputs.mcatStatus ?? 'Planning';
 
   if (categorySlug === 'gpa') {
-    return effectiveGpa >= 3.8
-      ? { label, percent: 100, status: 'Competitive' }
-      : effectiveGpa >= 3.6
-        ? { label, percent: 82, status: 'Competitive' }
-        : effectiveGpa >= 3.4
-          ? { label, percent: 62, status: 'Developing' }
-          : effectiveGpa >= 3.2
-            ? { label, percent: 40, status: 'Developing' }
-            : { label, percent: 20, status: 'Needs work' };
+    const status =
+      effectiveGpa >= 3.85 ? 'Strong' : effectiveGpa >= 3.7 ? 'Competitive' : effectiveGpa >= 3.5 ? 'Developing' : effectiveGpa >= 3.2 ? 'Needs Work' : 'Critical';
+    const percent =
+      status === 'Strong' ? 100 : status === 'Competitive' ? 82 : status === 'Developing' ? 62 : status === 'Needs Work' ? 38 : 15;
+    return { label, percent, status } as CategoryBar;
   }
 
   if (categorySlug === 'mcat') {
     const mcatScore = getLatestMcatScore(logs) ?? (inputs.mcatScore ? toNumber(inputs.mcatScore) : null);
-
-    if (mcatScore === null && mcatStatus !== 'Taken') {
-      return { label, percent: 15, status: 'Needs work' };
-    }
-
-    if (mcatScore === null) {
-      return { label, percent: 15, status: 'Needs work' };
-    }
-
-    if (mcatScore >= 517) return { label, percent: 100, status: 'Competitive' };
-    if (mcatScore >= 511) return { label, percent: 82, status: 'Competitive' };
-    if (mcatScore >= 506) return { label, percent: 62, status: 'Developing' };
-    if (mcatScore >= 500) return { label, percent: 44, status: 'Developing' };
-    return { label, percent: 25, status: 'Needs work' };
+    if (mcatScore === null || mcatStatus !== 'Taken') return { label, percent: 15, status: 'Critical' };
+    const status =
+      mcatScore >= 517 ? 'Strong' : mcatScore >= 511 ? 'Competitive' : mcatScore >= 505 ? 'Developing' : mcatScore >= 500 ? 'Needs Work' : 'Critical';
+    const percent =
+      status === 'Strong' ? 100 : status === 'Competitive' ? 82 : status === 'Developing' ? 62 : status === 'Needs Work' ? 38 : 15;
+    return { label, percent, status } as CategoryBar;
   }
 
   if (categorySlug === 'clinical-experience') {
     const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
     const total = baselineClinical + loggedHours;
-    return { label, percent: smoothFill(total, 200), status: total >= 200 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineClinical, 200) };
+    const status: CategoryBar['status'] =
+      total >= 500 ? 'Strong' : total >= 200 ? 'Competitive' : total >= 100 ? 'Developing' : total >= 50 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(total, 500), status, baselinePercent: smoothFill(baselineClinical, 500) };
   }
 
   if (categorySlug === 'physician-shadowing') {
     const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
     const total = baselineShadowing + loggedHours;
-    return { label, percent: smoothFill(total, 100), status: total >= 100 ? 'Competitive' : total >= 20 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineShadowing, 100) };
+    const status: CategoryBar['status'] =
+      total >= 100 ? 'Strong' : total >= 60 ? 'Competitive' : total >= 30 ? 'Developing' : total >= 15 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(total, 100), status, baselinePercent: smoothFill(baselineShadowing, 100) };
   }
 
   if (categorySlug === 'community-service') {
     const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
     const total = baselineVolunteering + loggedHours;
-    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 75 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineVolunteering, 150) };
+    const status: CategoryBar['status'] =
+      total >= 250 ? 'Strong' : total >= 100 ? 'Competitive' : total >= 50 ? 'Developing' : total >= 20 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(total, 250), status, baselinePercent: smoothFill(baselineVolunteering, 250) };
   }
 
   if (categorySlug === 'research') {
     const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
     const total = baselineResearch + loggedHours;
-    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineResearch, 150) };
+    const status: CategoryBar['status'] =
+      total >= 400 ? 'Strong' : total >= 200 ? 'Competitive' : total >= 100 ? 'Developing' : total >= 50 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(total, 400), status, baselinePercent: smoothFill(baselineResearch, 400) };
   }
 
   if (categorySlug === 'leadership') {
     const total = baselineLeadership + logs.length;
-    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineLeadership, 3) };
+    const status: CategoryBar['status'] =
+      total >= 3 ? 'Strong' : total >= 2 ? 'Competitive' : total >= 1 ? 'Developing' : 'Critical';
+    return { label, percent: smoothFill(total, 3), status, baselinePercent: smoothFill(baselineLeadership, 3) };
   }
 
   if (categorySlug === 'extracurriculars') {
     const total = logs.length;
-    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work', baselinePercent: 0 };
+    const status: CategoryBar['status'] =
+      total >= 4 ? 'Strong' : total >= 3 ? 'Competitive' : total >= 2 ? 'Developing' : total >= 1 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(total, 4), status, baselinePercent: 0 };
   }
 
   if (categorySlug === 'letters-of-recommendation') {
     const confirmed = logs.filter((log) => log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received')).length;
-    return { label, percent: smoothFill(confirmed, 3), status: confirmed >= 3 ? 'Competitive' : confirmed >= 1 ? 'Developing' : 'Needs work', baselinePercent: 0 };
+    const status: CategoryBar['status'] =
+      confirmed >= 5 ? 'Strong' : confirmed >= 4 ? 'Competitive' : confirmed >= 3 ? 'Developing' : confirmed >= 2 ? 'Needs Work' : 'Critical';
+    return { label, percent: smoothFill(confirmed, 5), status, baselinePercent: 0 };
   }
 
   return null;
@@ -497,9 +499,11 @@ export default function CategoryDetailClient({ categorySlug }: CategoryDetailCli
                       const baselineFill = categoryBar.baselinePercent ?? categoryBar.percent;
                       const progressFill = Math.max(0, categoryBar.percent - baselineFill);
                       const barColorMap: Record<string, string> = {
-                        'Competitive': '#16a34a',
-                        'Developing': '#d97706',
-                        'Needs work': '#dc2626',
+                        'Strong': '#15803d',
+                        'Competitive': '#22c55e',
+                        'Developing': '#eab308',
+                        'Needs Work': '#f97316',
+                        'Critical': '#991b1b',
                       };
                       if (progressFill > 0) {
                         return (

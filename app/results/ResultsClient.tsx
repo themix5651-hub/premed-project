@@ -22,7 +22,7 @@ type SearchParams = {
 type CategoryBar = {
   label: string;
   percent: number;
-  status: 'Competitive' | 'Developing' | 'Needs work';
+  status: 'Strong' | 'Competitive' | 'Developing' | 'Needs Work' | 'Critical';
 };
 
 type ResultsClientProps = {
@@ -45,9 +45,11 @@ function buildCategory(label: string, percent: number, status: CategoryBar['stat
 }
 
 function getStatusClasses(status: CategoryBar['status']) {
-  if (status === 'Competitive') return { fill: 'bg-green-600', text: 'text-green-600' };
-  if (status === 'Developing') return { fill: 'bg-amber-600', text: 'text-amber-600' };
-  return { fill: 'bg-red-600', text: 'text-red-600' };
+  if (status === 'Strong') return { fill: 'bg-green-700', text: 'text-green-700' };
+  if (status === 'Competitive') return { fill: 'bg-green-500', text: 'text-green-600' };
+  if (status === 'Developing') return { fill: 'bg-yellow-500', text: 'text-yellow-600' };
+  if (status === 'Needs Work') return { fill: 'bg-orange-500', text: 'text-orange-600' };
+  return { fill: 'bg-red-800', text: 'text-red-800' }; // Critical
 }
 
 function generateReport(params: SearchParams) {
@@ -64,49 +66,62 @@ function generateReport(params: SearchParams) {
 
   let score = 50;
 
-  if (effectiveGpa >= 3.8) score += 18;
-  else if (effectiveGpa >= 3.6) score += 12;
-  else if (effectiveGpa >= 3.4) score += 5;
+  // GPA (Strong ≥3.85, Competitive ≥3.7, Developing ≥3.5, Needs Work ≥3.2, Critical <3.2)
+  if (effectiveGpa >= 3.85) score += 18;
+  else if (effectiveGpa >= 3.7) score += 12;
+  else if (effectiveGpa >= 3.5) score += 4;
   else if (effectiveGpa >= 3.2) score -= 5;
   else score -= 12;
 
+  // MCAT (Strong ≥517, Competitive ≥511, Developing ≥505, Needs Work ≥500, Critical <500)
   if (mcatStatus === 'Taken') {
     if (mcatScore >= 517) score += 18;
     else if (mcatScore >= 511) score += 12;
-    else if (mcatScore >= 506) score += 5;
+    else if (mcatScore >= 505) score += 4;
     else if (mcatScore >= 500) score -= 5;
     else score -= 14;
+  } else {
+    score -= 8;
   }
 
-  if (clinical >= 200) score += 14;
-  else if (clinical >= 100) score += 8;
-  else if (clinical >= 50) score += 2;
-  else if (clinical >= 20) score -= 5;
+  // Clinical (Strong ≥500, Competitive ≥200, Developing ≥100, Needs Work ≥50, Critical <50)
+  if (clinical >= 500) score += 14;
+  else if (clinical >= 200) score += 8;
+  else if (clinical >= 100) score += 2;
+  else if (clinical >= 50) score -= 4;
   else score -= 12;
 
-  if (shadowing >= 50) score += 9;
-  else if (shadowing >= 20) score += 5;
-  else if (shadowing >= 10) score += 0;
-  else if (shadowing >= 1) score -= 5;
-  else score -= 10;
+  // Shadowing (Strong ≥100, Competitive ≥60, Developing ≥30, Needs Work ≥15, Critical <15)
+  if (shadowing >= 100) score += 9;
+  else if (shadowing >= 60) score += 5;
+  else if (shadowing >= 30) score += 2;
+  else if (shadowing >= 15) score -= 3;
+  else score -= 9;
 
-  if (volunteering >= 150) score += 6;
-  else if (volunteering >= 75) score += 3;
-  else if (volunteering >= 25) score += 0;
-  else if (volunteering >= 1) score -= 2;
-  else score -= 5;
+  // Volunteering (Strong ≥250, Competitive ≥100, Developing ≥50, Needs Work ≥20, Critical <20)
+  if (volunteering >= 250) score += 6;
+  else if (volunteering >= 100) score += 3;
+  else if (volunteering >= 50) score += 1;
+  else if (volunteering >= 20) score -= 1;
+  else score -= 4;
 
-  if (research >= 150) score += 6;
-  else if (research >= 50) score += 3;
-  else if (research >= 1) score += 1;
+  // Research (Strong ≥400, Competitive ≥200, Developing ≥100, Needs Work ≥50, Critical <50)
+  if (research >= 400) score += 7;
+  else if (research >= 200) score += 4;
+  else if (research >= 100) score += 2;
+  else if (research >= 50) score += 0;
+  else score -= 2;
 
+  // Leadership (Strong ≥3, Competitive 2, Developing 1, Critical 0)
   if (leadership >= 3) score += 5;
-  else if (leadership >= 1) score += 2;
+  else if (leadership >= 2) score += 3;
+  else if (leadership >= 1) score += 1;
   else score -= 5;
 
-  if (effectiveGpa < 3.4 && clinical < 50) score -= 6;
+  // Compound penalties
+  if (effectiveGpa < 3.5 && clinical < 100) score -= 6;
   if (clinical < 50 && shadowing < 15) score -= 8;
-  if (research > 100 && clinical < 50) score -= 4;
+  if (research > 200 && clinical < 50) score -= 4;
 
   score = Math.max(20, Math.min(97, Math.round(score)));
 
@@ -232,79 +247,83 @@ function generateReport(params: SearchParams) {
   else if (score >= 40) signal = 'A developing applicant whose current record still signals uneven preparation across key premed categories.';
 
   const categories: CategoryBar[] = [
-    effectiveGpa >= 3.8
-      ? buildCategory('GPA', 100, 'Competitive')
-      : effectiveGpa >= 3.6
+    effectiveGpa >= 3.85
+      ? buildCategory('GPA', 100, 'Strong')
+      : effectiveGpa >= 3.7
         ? buildCategory('GPA', 82, 'Competitive')
-        : effectiveGpa >= 3.4
+        : effectiveGpa >= 3.5
           ? buildCategory('GPA', 62, 'Developing')
           : effectiveGpa >= 3.2
-            ? buildCategory('GPA', 40, 'Developing')
-            : buildCategory('GPA', 20, 'Needs work'),
+            ? buildCategory('GPA', 38, 'Needs Work')
+            : buildCategory('GPA', 15, 'Critical'),
     mcatStatus !== 'Taken'
-      ? buildCategory('MCAT', 15, 'Needs work')
+      ? buildCategory('MCAT', 15, 'Critical')
       : mcatScore >= 517
-        ? buildCategory('MCAT', 100, 'Competitive')
+        ? buildCategory('MCAT', 100, 'Strong')
         : mcatScore >= 511
           ? buildCategory('MCAT', 82, 'Competitive')
-          : mcatScore >= 506
+          : mcatScore >= 505
             ? buildCategory('MCAT', 62, 'Developing')
             : mcatScore >= 500
-              ? buildCategory('MCAT', 44, 'Developing')
-              : buildCategory('MCAT', 25, 'Needs work'),
-    clinical >= 200
-      ? buildCategory('Clinical experience', 100, 'Competitive')
-      : clinical >= 100
-        ? buildCategory('Clinical experience', 70, 'Competitive')
-        : clinical >= 50
-          ? buildCategory('Clinical experience', 50, 'Developing')
-          : clinical >= 20
-            ? buildCategory('Clinical experience', 30, 'Developing')
-            : buildCategory('Clinical experience', 12, 'Needs work'),
-    shadowing >= 50
-      ? buildCategory('Physician shadowing', 100, 'Competitive')
-      : shadowing >= 20
-        ? buildCategory('Physician shadowing', 72, 'Competitive')
-        : shadowing >= 10
-          ? buildCategory('Physician shadowing', 50, 'Developing')
-          : shadowing >= 1
-            ? buildCategory('Physician shadowing', 30, 'Developing')
-            : buildCategory('Physician shadowing', 10, 'Needs work'),
-    volunteering >= 150
-      ? buildCategory('Community service', 100, 'Competitive')
-      : volunteering >= 75
-        ? buildCategory('Community service', 72, 'Competitive')
-        : volunteering >= 25
-          ? buildCategory('Community service', 50, 'Developing')
-          : volunteering >= 1
-            ? buildCategory('Community service', 30, 'Developing')
-            : buildCategory('Community service', 10, 'Needs work'),
-    research >= 150
-      ? buildCategory('Research', 100, 'Competitive')
-      : research >= 50
-        ? buildCategory('Research', 70, 'Competitive')
-        : research >= 1
-          ? buildCategory('Research', 45, 'Developing')
-          : buildCategory('Research', 10, 'Needs work'),
+              ? buildCategory('MCAT', 38, 'Needs Work')
+              : buildCategory('MCAT', 15, 'Critical'),
+    clinical >= 500
+      ? buildCategory('Clinical experience', 100, 'Strong')
+      : clinical >= 200
+        ? buildCategory('Clinical experience', 80, 'Competitive')
+        : clinical >= 100
+          ? buildCategory('Clinical experience', 60, 'Developing')
+          : clinical >= 50
+            ? buildCategory('Clinical experience', 35, 'Needs Work')
+            : buildCategory('Clinical experience', 15, 'Critical'),
+    shadowing >= 100
+      ? buildCategory('Physician shadowing', 100, 'Strong')
+      : shadowing >= 60
+        ? buildCategory('Physician shadowing', 80, 'Competitive')
+        : shadowing >= 30
+          ? buildCategory('Physician shadowing', 60, 'Developing')
+          : shadowing >= 15
+            ? buildCategory('Physician shadowing', 35, 'Needs Work')
+            : buildCategory('Physician shadowing', 15, 'Critical'),
+    volunteering >= 250
+      ? buildCategory('Community service', 100, 'Strong')
+      : volunteering >= 100
+        ? buildCategory('Community service', 80, 'Competitive')
+        : volunteering >= 50
+          ? buildCategory('Community service', 60, 'Developing')
+          : volunteering >= 20
+            ? buildCategory('Community service', 35, 'Needs Work')
+            : buildCategory('Community service', 15, 'Critical'),
+    research >= 400
+      ? buildCategory('Research', 100, 'Strong')
+      : research >= 200
+        ? buildCategory('Research', 80, 'Competitive')
+        : research >= 100
+          ? buildCategory('Research', 60, 'Developing')
+          : research >= 50
+            ? buildCategory('Research', 35, 'Needs Work')
+            : buildCategory('Research', 15, 'Critical'),
     leadership >= 3
-      ? buildCategory('Leadership', 100, 'Competitive')
-      : leadership >= 1
-        ? buildCategory('Leadership', 55, 'Developing')
-        : buildCategory('Leadership', 10, 'Needs work'),
-    buildCategory('Extracurriculars', 0, 'Needs work'),
-    buildCategory('Letters of Recommendation', 0, 'Needs work'),
+      ? buildCategory('Leadership', 100, 'Strong')
+      : leadership >= 2
+        ? buildCategory('Leadership', 80, 'Competitive')
+        : leadership >= 1
+          ? buildCategory('Leadership', 55, 'Developing')
+          : buildCategory('Leadership', 15, 'Critical'),
+    buildCategory('Extracurriculars', 15, 'Critical'),
+    buildCategory('Letters of Recommendation', 15, 'Critical'),
   ];
 
   const tier =
     score >= 85
       ? { label: 'Strong', classes: 'bg-green-100 text-green-700' }
       : score >= 70
-        ? { label: 'Competitive', classes: 'bg-blue-100 text-blue-700' }
+        ? { label: 'Competitive', classes: 'bg-green-50 text-green-600' }
         : score >= 55
-          ? { label: 'Building', classes: 'bg-yellow-100 text-yellow-700' }
+          ? { label: 'Developing', classes: 'bg-yellow-100 text-yellow-700' }
           : score >= 40
-            ? { label: 'Developing', classes: 'bg-orange-100 text-orange-700' }
-            : { label: 'Needs work', classes: 'bg-red-100 text-red-700' };
+            ? { label: 'Needs Work', classes: 'bg-orange-100 text-orange-700' }
+            : { label: 'Critical', classes: 'bg-red-100 text-red-800' };
 
   return {
     score,
@@ -409,16 +428,24 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
         </div>
         <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-green-600" />
+            <span className="h-2.5 w-2.5 rounded-full bg-green-700" />
+            <span>Strong</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
             <span>Competitive</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-600" />
+            <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
             <span>Developing</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
-            <span>Needs work</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+            <span>Needs Work</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-800" />
+            <span>Critical</span>
           </div>
         </div>
       </Card>

@@ -51,10 +51,10 @@ function smoothFill(total: number, max: number) {
 
 function getScoreTier(score: number) {
   if (score >= 85) return { label: 'Strong', classes: 'bg-green-100 text-green-700' };
-  if (score >= 70) return { label: 'Competitive', classes: 'bg-blue-100 text-blue-700' };
-  if (score >= 55) return { label: 'Building', classes: 'bg-yellow-100 text-yellow-700' };
-  if (score >= 40) return { label: 'Developing', classes: 'bg-orange-100 text-orange-700' };
-  return { label: 'Needs work', classes: 'bg-red-100 text-red-700' };
+  if (score >= 70) return { label: 'Competitive', classes: 'bg-green-50 text-green-600' };
+  if (score >= 55) return { label: 'Developing', classes: 'bg-yellow-100 text-yellow-700' };
+  if (score >= 40) return { label: 'Needs Work', classes: 'bg-orange-100 text-orange-700' };
+  return { label: 'Critical', classes: 'bg-red-100 text-red-800' };
 }
 
 function getLatestMcatScore(logs: ActivityLog[]) {
@@ -87,15 +87,16 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
   const mcatStatus = inputs.mcatStatus ?? 'Planning';
   const mcatScore = getLatestMcatScore(logs) ?? (inputs.mcatScore ? toNumber(inputs.mcatScore) : null);
 
-  const gpaPercent = effectiveGpa >= 3.8 ? 100 : effectiveGpa >= 3.6 ? 82 : effectiveGpa >= 3.4 ? 62 : effectiveGpa >= 3.2 ? 40 : 20;
-  const gpaStatus: CategoryBar['status'] = effectiveGpa >= 3.6 ? 'Competitive' : effectiveGpa >= 3.2 ? 'Developing' : 'Needs work';
+  const gpaStatus: CategoryBar['status'] =
+    effectiveGpa >= 3.85 ? 'Strong' : effectiveGpa >= 3.7 ? 'Competitive' : effectiveGpa >= 3.5 ? 'Developing' : effectiveGpa >= 3.2 ? 'Needs Work' : 'Critical';
+  const gpaPercent =
+    gpaStatus === 'Strong' ? 100 : gpaStatus === 'Competitive' ? 82 : gpaStatus === 'Developing' ? 62 : gpaStatus === 'Needs Work' ? 38 : 15;
 
-  const mcatPercent = mcatScore !== null
-    ? (mcatScore >= 517 ? 100 : mcatScore >= 511 ? 82 : mcatScore >= 506 ? 62 : mcatScore >= 500 ? 44 : 25)
-    : 15;
-  const mcatStatusVal: CategoryBar['status'] = mcatScore !== null
-    ? (mcatScore >= 511 ? 'Competitive' : mcatScore >= 500 ? 'Developing' : 'Needs work')
-    : 'Needs work';
+  const mcatStatus2: CategoryBar['status'] = mcatScore !== null
+    ? (mcatScore >= 517 ? 'Strong' : mcatScore >= 511 ? 'Competitive' : mcatScore >= 505 ? 'Developing' : mcatScore >= 500 ? 'Needs Work' : 'Critical')
+    : 'Critical';
+  const mcatPercent =
+    mcatStatus2 === 'Strong' ? 100 : mcatStatus2 === 'Competitive' ? 82 : mcatStatus2 === 'Developing' ? 62 : mcatStatus2 === 'Needs Work' ? 38 : 15;
 
   const confirmedLetters = logs.filter(
     (log) =>
@@ -103,54 +104,67 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
       (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
   ).length;
 
+  const clinicalStatus: CategoryBar['status'] =
+    totalClinical >= 500 ? 'Strong' : totalClinical >= 200 ? 'Competitive' : totalClinical >= 100 ? 'Developing' : totalClinical >= 50 ? 'Needs Work' : 'Critical';
+  const shadowingStatus: CategoryBar['status'] =
+    totalShadowing >= 100 ? 'Strong' : totalShadowing >= 60 ? 'Competitive' : totalShadowing >= 30 ? 'Developing' : totalShadowing >= 15 ? 'Needs Work' : 'Critical';
+  const volunteeringStatus: CategoryBar['status'] =
+    totalVolunteering >= 250 ? 'Strong' : totalVolunteering >= 100 ? 'Competitive' : totalVolunteering >= 50 ? 'Developing' : totalVolunteering >= 20 ? 'Needs Work' : 'Critical';
+  const researchStatus: CategoryBar['status'] =
+    totalResearch >= 400 ? 'Strong' : totalResearch >= 200 ? 'Competitive' : totalResearch >= 100 ? 'Developing' : totalResearch >= 50 ? 'Needs Work' : 'Critical';
+  const leadershipStatus: CategoryBar['status'] =
+    totalLeadership >= 3 ? 'Strong' : totalLeadership >= 2 ? 'Competitive' : totalLeadership >= 1 ? 'Developing' : 'Critical';
+
+  const extracurricularCount = logs.filter((log) => log.category === 'extracurriculars').length;
+  const extracurricularStatus: CategoryBar['status'] =
+    extracurricularCount >= 4 ? 'Strong' : extracurricularCount >= 3 ? 'Competitive' : extracurricularCount >= 2 ? 'Developing' : extracurricularCount >= 1 ? 'Needs Work' : 'Critical';
+
+  const lettersStatus: CategoryBar['status'] =
+    confirmedLetters >= 5 ? 'Strong' : confirmedLetters >= 4 ? 'Competitive' : confirmedLetters >= 3 ? 'Developing' : confirmedLetters >= 2 ? 'Needs Work' : 'Critical';
+
   return [
     { label: 'GPA', percent: gpaPercent, status: gpaStatus, baselinePercent: gpaPercent },
-    { label: 'MCAT', percent: mcatPercent, status: mcatStatusVal, baselinePercent: mcatPercent },
+    { label: 'MCAT', percent: mcatPercent, status: mcatStatus2, baselinePercent: mcatPercent },
     {
       label: 'Clinical experience',
-      percent: smoothFill(totalClinical, 200),
-      status: totalClinical >= 200 ? 'Competitive' : totalClinical >= 50 ? 'Developing' : 'Needs work',
-      baselinePercent: smoothFill(baselineClinical, 200),
+      percent: smoothFill(totalClinical, 500),
+      status: clinicalStatus,
+      baselinePercent: smoothFill(baselineClinical, 500),
     },
     {
       label: 'Physician shadowing',
       percent: smoothFill(totalShadowing, 100),
-      status: totalShadowing >= 100 ? 'Competitive' : totalShadowing >= 20 ? 'Developing' : 'Needs work',
+      status: shadowingStatus,
       baselinePercent: smoothFill(baselineShadowing, 100),
     },
     {
       label: 'Community service',
-      percent: smoothFill(totalVolunteering, 150),
-      status: totalVolunteering >= 150 ? 'Competitive' : totalVolunteering >= 75 ? 'Developing' : 'Needs work',
-      baselinePercent: smoothFill(baselineVolunteering, 150),
+      percent: smoothFill(totalVolunteering, 250),
+      status: volunteeringStatus,
+      baselinePercent: smoothFill(baselineVolunteering, 250),
     },
     {
       label: 'Research',
-      percent: smoothFill(totalResearch, 150),
-      status: totalResearch >= 150 ? 'Competitive' : totalResearch >= 50 ? 'Developing' : 'Needs work',
-      baselinePercent: smoothFill(baselineResearch, 150),
+      percent: smoothFill(totalResearch, 400),
+      status: researchStatus,
+      baselinePercent: smoothFill(baselineResearch, 400),
     },
     {
       label: 'Leadership',
       percent: smoothFill(totalLeadership, 3),
-      status: totalLeadership >= 3 ? 'Competitive' : totalLeadership >= 1 ? 'Developing' : 'Needs work',
+      status: leadershipStatus,
       baselinePercent: smoothFill(baselineLeadership, 3),
     },
     {
       label: 'Extracurriculars',
-      percent: smoothFill(logs.filter((log) => log.category === 'extracurriculars').length, 3),
-      status:
-        logs.filter((log) => log.category === 'extracurriculars').length >= 3
-          ? 'Competitive'
-          : logs.filter((log) => log.category === 'extracurriculars').length >= 1
-            ? 'Developing'
-            : 'Needs work',
+      percent: smoothFill(extracurricularCount, 4),
+      status: extracurricularStatus,
       baselinePercent: 0,
     },
     {
       label: 'Letters of Recommendation',
-      percent: smoothFill(confirmedLetters, 3),
-      status: confirmedLetters >= 3 ? 'Competitive' : confirmedLetters >= 1 ? 'Developing' : 'Needs work',
+      percent: smoothFill(confirmedLetters, 5),
+      status: lettersStatus,
       baselinePercent: 0,
     },
   ] as CategoryBar[];
@@ -303,9 +317,11 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
                 const baselineFill = category.baselinePercent ?? category.percent;
                 const progressFill = Math.max(0, category.percent - baselineFill);
                 const barColorMap: Record<string, string> = {
-                  'Competitive': '#16a34a',
-                  'Developing': '#d97706',
-                  'Needs work': '#dc2626',
+                  'Strong': '#15803d',
+                  'Competitive': '#22c55e',
+                  'Developing': '#eab308',
+                  'Needs Work': '#f97316',
+                  'Critical': '#991b1b',
                 };
 
                 return (
@@ -338,16 +354,24 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
 
             <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-600">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-600" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-700" />
+                <span>Strong</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 <span>Competitive</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-600" />
+                <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
                 <span>Developing</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
-                <span>Needs work</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                <span>Needs Work</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-800" />
+                <span>Critical</span>
               </div>
             </div>
             <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
