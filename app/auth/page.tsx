@@ -82,7 +82,15 @@ export default function AuthPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-xl items-center px-4 py-10 sm:px-6 lg:px-8">
-      <Card title={mode === 'login' ? 'Log in to Premed Path' : 'Create your Premed Path account'} className="w-full">
+      <Card title="Save your readiness score." className="w-full">
+        <p className="mb-4 text-sm text-slate-600">
+          Create a free account to save your report, track your hours over time, and come back anytime to update your stats.
+        </p>
+        <ul className="mb-6 space-y-1.5 text-sm text-slate-600">
+          <li>✓ Free forever — no credit card needed</li>
+          <li>✓ Your score and category breakdown saved automatically</li>
+          <li>✓ Log hours over time and watch your application grow</li>
+        </ul>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>

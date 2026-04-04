@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/intake', label: 'Intake Form' },
+  { href: '/intake', label: 'Get My Score' },
   { href: '/dashboard', label: 'Dashboard' }
 ];
 

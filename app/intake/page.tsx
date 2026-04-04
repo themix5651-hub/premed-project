@@ -19,6 +19,8 @@ export default function IntakePage() {
   const [volunteeringHours, setVolunteeringHours] = useState('');
   const [researchHours, setResearchHours] = useState('');
   const [leadershipExperiences, setLeadershipExperiences] = useState('');
+  const [extracurriculars, setExtracurriculars] = useState('');
+  const [lettersOfRec, setLettersOfRec] = useState('');
   const [mcatStatus, setMcatStatus] = useState<McatStatus>('Planning');
   const [mcatScore, setMcatScore] = useState('');
   const [targetApplicationYear, setTargetApplicationYear] = useState('');
@@ -35,6 +37,8 @@ export default function IntakePage() {
       volunteeringHours,
       researchHours,
       leadershipExperiences,
+      extracurriculars,
+      lettersOfRec,
       mcatStatus,
       mcatScore,
       targetApplicationYear,
@@ -45,7 +49,15 @@ export default function IntakePage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
-      <Card title="Build your readiness report">
+
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold text-slate-900">Fill out this 2-minute form.</h1>
+        <p className="mt-2 text-base text-slate-600">
+          Answer honestly — the more accurate your inputs, the more useful your score. This could be the most important 2 minutes of your premed journey.
+        </p>
+      </div>
+
+      <Card title="Your stats">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -104,6 +116,7 @@ export default function IntakePage() {
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
                 required
               />
+              <p className="mt-1 text-xs text-slate-400">Include scribing, EMT, CNA, hospital volunteering with patient contact</p>
             </div>
 
             <div>
@@ -115,10 +128,11 @@ export default function IntakePage() {
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
                 required
               />
+              <p className="mt-1 text-xs text-slate-400">Observing physicians — does not count as clinical</p>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">Volunteering hours</label>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Community service hours</label>
               <input
                 value={volunteeringHours}
                 onChange={(e) => setVolunteeringHours(e.target.value)}
@@ -126,6 +140,7 @@ export default function IntakePage() {
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
                 required
               />
+              <p className="mt-1 text-xs text-slate-400">Non-clinical service — free clinics, tutoring, food banks, mentorship</p>
             </div>
 
             <div>
@@ -137,18 +152,52 @@ export default function IntakePage() {
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
                 required
               />
+              <p className="mt-1 text-xs text-slate-400">Lab work, clinical research, data analysis, literature reviews</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Leadership experiences</label>
+              <input
+                type="number"
+                min="0"
+                value={leadershipExperiences}
+                onChange={(e) => setLeadershipExperiences(e.target.value)}
+                placeholder="2"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
+                required
+              />
+              <p className="mt-1 text-xs text-slate-400">Clubs, organizations, teams where you held a formal role</p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Extracurricular activities</label>
+              <input
+                type="number"
+                min="0"
+                value={extracurriculars}
+                onChange={(e) => setExtracurriculars(e.target.value)}
+                placeholder="3"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
+                required
+              />
+              <p className="mt-1 text-xs text-slate-400">Sustained activities outside of clinical/research — sports, music, etc.</p>
             </div>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">Leadership experiences</label>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Letters of recommendation secured or committed</label>
             <input
-              value={leadershipExperiences}
-              onChange={(e) => setLeadershipExperiences(e.target.value)}
+              type="number"
+              min="0"
+              value={lettersOfRec}
+              onChange={(e) => setLettersOfRec(e.target.value)}
               placeholder="2"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
               required
             />
+            <p className="mt-1 text-xs text-slate-400">Professors, physicians, research mentors who have agreed or you plan to ask</p>
           </div>
 
           <div>
@@ -192,7 +241,7 @@ export default function IntakePage() {
           </div>
 
           <div className="pt-2">
-            <Button type="submit">Generate Report</Button>
+            <Button type="submit">Generate My Free Score →</Button>
           </div>
         </form>
       </Card>

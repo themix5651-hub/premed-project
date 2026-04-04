@@ -520,6 +520,33 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
           </div>
         </div>
       </Card>
+
+      {/* Save prompt */}
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-8 py-10 text-center">
+        <h2 className="text-2xl font-bold text-slate-900">Don&apos;t lose your results.</h2>
+        <ul className="mx-auto mt-4 max-w-sm space-y-2 text-left text-sm text-slate-600">
+          <li>📊 Track your progress as you log clinical hours, research, and more</li>
+          <li>📈 Watch your category bars move in real time as your application grows</li>
+          <li>🎯 Come back anytime to update your stats and regenerate your score</li>
+        </ul>
+        <div className="mt-6">
+          <Button href="/auth">Create Free Account →</Button>
+        </div>
+      </div>
+
+      {/* Premium pitch */}
+      <div className="rounded-2xl border border-slate-200 bg-white px-8 py-10">
+        <hr className="mb-8 border-slate-200" />
+        <h2 className="text-xl font-bold text-slate-900">Want to actually fix your weak spots — not just know about them?</h2>
+        <p className="mt-3 text-sm leading-relaxed text-slate-600">
+          My Premed Path Premium finds real, personalized opportunities based on your exact gaps. If your clinical hours are low, we find clinics near you currently accepting scribes or volunteers — with direct links to apply. If your research is weak, we surface open lab positions at your school. Not generic advice. Actual next steps, built for your profile, your location, and your timeline.
+        </p>
+        <div className="mt-6">
+          <Button href="/premium" className="bg-slate-900 text-white hover:bg-slate-700">Learn More About Premium →</Button>
+        </div>
+        <p className="mt-3 text-xs text-slate-400">Join the waitlist — Premium is coming soon.</p>
+      </div>
+
     </div>
   );
 }
