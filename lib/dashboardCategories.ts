@@ -4,6 +4,7 @@ export type CategoryBar = {
   label: string;
   percent: number;
   status: CategoryStatus;
+  baselinePercent?: number;
 };
 
 export type SearchParamsInput = {

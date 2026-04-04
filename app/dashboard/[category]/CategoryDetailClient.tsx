@@ -162,38 +162,42 @@ function buildCategoryBar(inputs: SearchParamsInput | undefined, logs: ActivityL
   }
 
   if (categorySlug === 'clinical-experience') {
-    const total = baselineClinical + logs.reduce((sum, log) => sum + (log.hours || 0), 0);
-    return { label, percent: smoothFill(total, 200), status: total >= 200 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work' };
+    const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
+    const total = baselineClinical + loggedHours;
+    return { label, percent: smoothFill(total, 200), status: total >= 200 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineClinical, 200) };
   }
 
   if (categorySlug === 'physician-shadowing') {
-    const total = baselineShadowing + logs.reduce((sum, log) => sum + (log.hours || 0), 0);
-    return { label, percent: smoothFill(total, 100), status: total >= 100 ? 'Competitive' : total >= 20 ? 'Developing' : 'Needs work' };
+    const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
+    const total = baselineShadowing + loggedHours;
+    return { label, percent: smoothFill(total, 100), status: total >= 100 ? 'Competitive' : total >= 20 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineShadowing, 100) };
   }
 
   if (categorySlug === 'community-service') {
-    const total = baselineVolunteering + logs.reduce((sum, log) => sum + (log.hours || 0), 0);
-    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 75 ? 'Developing' : 'Needs work' };
+    const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
+    const total = baselineVolunteering + loggedHours;
+    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 75 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineVolunteering, 150) };
   }
 
   if (categorySlug === 'research') {
-    const total = baselineResearch + logs.reduce((sum, log) => sum + (log.hours || 0), 0);
-    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work' };
+    const loggedHours = logs.reduce((sum, log) => sum + (log.hours || 0), 0);
+    const total = baselineResearch + loggedHours;
+    return { label, percent: smoothFill(total, 150), status: total >= 150 ? 'Competitive' : total >= 50 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineResearch, 150) };
   }
 
   if (categorySlug === 'leadership') {
     const total = baselineLeadership + logs.length;
-    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work' };
+    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work', baselinePercent: smoothFill(baselineLeadership, 3) };
   }
 
   if (categorySlug === 'extracurriculars') {
     const total = logs.length;
-    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work' };
+    return { label, percent: smoothFill(total, 3), status: total >= 3 ? 'Competitive' : total >= 1 ? 'Developing' : 'Needs work', baselinePercent: 0 };
   }
 
   if (categorySlug === 'letters-of-recommendation') {
     const confirmed = logs.filter((log) => log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received')).length;
-    return { label, percent: smoothFill(confirmed, 3), status: confirmed >= 3 ? 'Competitive' : confirmed >= 1 ? 'Developing' : 'Needs work' };
+    return { label, percent: smoothFill(confirmed, 3), status: confirmed >= 3 ? 'Competitive' : confirmed >= 1 ? 'Developing' : 'Needs work', baselinePercent: 0 };
   }
 
   return null;
@@ -483,10 +487,30 @@ export default function CategoryDetailClient({ categorySlug }: CategoryDetailCli
                 <div className="min-w-[220px] space-y-1.5">
                   <div className="flex items-center justify-between gap-3 text-sm">
                     <span className="font-medium text-slate-700">{categoryBar.label}</span>
-                    <span className={`font-medium ${getStatusClasses(categoryBar.status).text}`}>{categoryBar.status}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className={`font-medium ${getStatusClasses(categoryBar.status).text}`}>{categoryBar.status}</span>
+                      <span className={`text-xs font-medium ${getStatusClasses(categoryBar.status).text}`}>{categoryBar.percent}%</span>
+                    </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
-                    <div className={`h-full rounded-full ${getStatusClasses(categoryBar.status).fill}`} style={{ width: `${categoryBar.percent}%` }} />
+                    {(() => {
+                      const baselineFill = categoryBar.baselinePercent ?? categoryBar.percent;
+                      const progressFill = Math.max(0, categoryBar.percent - baselineFill);
+                      const barColorMap: Record<string, string> = {
+                        'Competitive': '#16a34a',
+                        'Developing': '#d97706',
+                        'Needs work': '#dc2626',
+                      };
+                      if (progressFill > 0) {
+                        return (
+                          <div style={{ display: 'flex', height: '100%' }}>
+                            <div style={{ width: `${baselineFill}%`, background: 'rgba(100,100,100,0.4)', borderRadius: '4px 0 0 4px' }} />
+                            <div style={{ width: `${progressFill}%`, background: barColorMap[categoryBar.status], borderRadius: '0 4px 4px 0' }} />
+                          </div>
+                        );
+                      }
+                      return <div className={`h-full rounded-full ${getStatusClasses(categoryBar.status).fill}`} style={{ width: `${categoryBar.percent}%` }} />;
+                    })()}
                   </div>
                 </div>
               ) : null}

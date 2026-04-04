@@ -380,18 +380,6 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Your readiness report</h1>
-          <p className="mt-1 text-sm text-slate-600">{report.summary}</p>
-          {saveMessage ? <p className="mt-2 text-sm text-slate-500">{saveMessage}</p> : null}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button href="/dashboard" variant="secondary">Log new activity</Button>
-          <Button href="/intake">Edit Inputs</Button>
-        </div>
-      </div>
-
       <Card title="Readiness Score" className="border-brand-100 bg-brand-50">
         <div className="flex flex-wrap items-center gap-3">
           <p className="text-5xl font-bold text-brand-900">{report.score}/100</p>
@@ -435,43 +423,53 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
         </div>
       </Card>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Your readiness report</h1>
+          <p className="mt-1 text-sm text-slate-600">{report.summary}</p>
+          {saveMessage ? <p className="mt-2 text-sm text-slate-500">{saveMessage}</p> : null}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button href="/dashboard" variant="secondary">Log new activity</Button>
+          <Button href="/intake">Edit Inputs</Button>
+        </div>
+      </div>
+
       <Card title="What your application currently signals">
         <p className="text-sm text-slate-700">{report.signal}</p>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card title="Strengths">
-          <ul className="space-y-2 text-sm text-slate-700">
-            {report.strengths.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </Card>
+      <Card title="Strengths">
+        <ul className="space-y-2 text-sm text-slate-700">
+          {report.strengths.slice(0, 3).map((item) => (
+            <li key={item}>• {item}</li>
+          ))}
+        </ul>
+      </Card>
 
-        <Card title="Weak Spots">
-          <ul className="space-y-2 text-sm text-slate-700">
-            {report.weakSpots.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </Card>
+      <Card title="Weak Spots">
+        <ul className="space-y-2 text-sm text-slate-700">
+          {report.weakSpots.map((item) => (
+            <li key={item}>• {item}</li>
+          ))}
+        </ul>
+      </Card>
 
-        <Card title="Top 3 Priorities">
-          <ul className="space-y-2 text-sm text-slate-700">
-            {report.priorities.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </Card>
+      <Card title="Top 3 Priorities">
+        <ul className="space-y-2 text-sm text-slate-700">
+          {report.priorities.map((item) => (
+            <li key={item}>• {item}</li>
+          ))}
+        </ul>
+      </Card>
 
-        <Card title="30-Day Action Plan">
-          <ul className="space-y-2 text-sm text-slate-700">
-            {report.actionPlan.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      <Card title="30-Day Action Plan">
+        <ul className="space-y-2 text-sm text-slate-700">
+          {report.actionPlan.map((item) => (
+            <li key={item}>• {item}</li>
+          ))}
+        </ul>
+      </Card>
 
       <Card title="Your baseline report">
         <p className="mb-4 text-sm text-slate-600">

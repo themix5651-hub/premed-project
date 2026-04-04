@@ -49,6 +49,14 @@ function smoothFill(total: number, max: number) {
   return Math.min(Math.round((total / max) * 100), 100);
 }
 
+function getScoreTier(score: number) {
+  if (score >= 85) return { label: 'Strong', classes: 'bg-green-100 text-green-700' };
+  if (score >= 70) return { label: 'Competitive', classes: 'bg-blue-100 text-blue-700' };
+  if (score >= 55) return { label: 'Building', classes: 'bg-yellow-100 text-yellow-700' };
+  if (score >= 40) return { label: 'Developing', classes: 'bg-orange-100 text-orange-700' };
+  return { label: 'Needs work', classes: 'bg-red-100 text-red-700' };
+}
+
 function getLatestMcatScore(logs: ActivityLog[]) {
   const latest = logs
     .filter((log) => log.category === 'mcat')
@@ -78,53 +86,55 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
   const totalLeadership = baselineLeadership + loggedLeadership;
   const mcatStatus = inputs.mcatStatus ?? 'Planning';
   const mcatScore = getLatestMcatScore(logs) ?? (inputs.mcatScore ? toNumber(inputs.mcatScore) : null);
+
+  const gpaPercent = effectiveGpa >= 3.8 ? 100 : effectiveGpa >= 3.6 ? 82 : effectiveGpa >= 3.4 ? 62 : effectiveGpa >= 3.2 ? 40 : 20;
+  const gpaStatus: CategoryBar['status'] = effectiveGpa >= 3.6 ? 'Competitive' : effectiveGpa >= 3.2 ? 'Developing' : 'Needs work';
+
+  const mcatPercent = mcatScore !== null
+    ? (mcatScore >= 517 ? 100 : mcatScore >= 511 ? 82 : mcatScore >= 506 ? 62 : mcatScore >= 500 ? 44 : 25)
+    : 15;
+  const mcatStatusVal: CategoryBar['status'] = mcatScore !== null
+    ? (mcatScore >= 511 ? 'Competitive' : mcatScore >= 500 ? 'Developing' : 'Needs work')
+    : 'Needs work';
+
+  const confirmedLetters = logs.filter(
+    (log) =>
+      log.category === 'letters-of-recommendation' &&
+      (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
+  ).length;
+
   return [
-    effectiveGpa >= 3.8
-      ? { label: 'GPA', percent: 100, status: 'Competitive' }
-      : effectiveGpa >= 3.6
-        ? { label: 'GPA', percent: 82, status: 'Competitive' }
-        : effectiveGpa >= 3.4
-          ? { label: 'GPA', percent: 62, status: 'Developing' }
-          : effectiveGpa >= 3.2
-            ? { label: 'GPA', percent: 40, status: 'Developing' }
-            : { label: 'GPA', percent: 20, status: 'Needs work' },
-    mcatScore !== null
-      ? mcatScore >= 517
-        ? { label: 'MCAT', percent: 100, status: 'Competitive' }
-        : mcatScore >= 511
-          ? { label: 'MCAT', percent: 82, status: 'Competitive' }
-          : mcatScore >= 506
-            ? { label: 'MCAT', percent: 62, status: 'Developing' }
-            : mcatScore >= 500
-              ? { label: 'MCAT', percent: 44, status: 'Developing' }
-              : { label: 'MCAT', percent: 25, status: 'Needs work' }
-      : mcatStatus !== 'Taken'
-        ? { label: 'MCAT', percent: 15, status: 'Needs work' }
-        : { label: 'MCAT', percent: 15, status: 'Needs work' },
+    { label: 'GPA', percent: gpaPercent, status: gpaStatus, baselinePercent: gpaPercent },
+    { label: 'MCAT', percent: mcatPercent, status: mcatStatusVal, baselinePercent: mcatPercent },
     {
       label: 'Clinical experience',
       percent: smoothFill(totalClinical, 200),
       status: totalClinical >= 200 ? 'Competitive' : totalClinical >= 50 ? 'Developing' : 'Needs work',
+      baselinePercent: smoothFill(baselineClinical, 200),
     },
     {
       label: 'Physician shadowing',
       percent: smoothFill(totalShadowing, 100),
       status: totalShadowing >= 100 ? 'Competitive' : totalShadowing >= 20 ? 'Developing' : 'Needs work',
+      baselinePercent: smoothFill(baselineShadowing, 100),
     },
     {
       label: 'Community service',
       percent: smoothFill(totalVolunteering, 150),
       status: totalVolunteering >= 150 ? 'Competitive' : totalVolunteering >= 75 ? 'Developing' : 'Needs work',
+      baselinePercent: smoothFill(baselineVolunteering, 150),
     },
     {
       label: 'Research',
       percent: smoothFill(totalResearch, 150),
       status: totalResearch >= 150 ? 'Competitive' : totalResearch >= 50 ? 'Developing' : 'Needs work',
+      baselinePercent: smoothFill(baselineResearch, 150),
     },
     {
       label: 'Leadership',
       percent: smoothFill(totalLeadership, 3),
       status: totalLeadership >= 3 ? 'Competitive' : totalLeadership >= 1 ? 'Developing' : 'Needs work',
+      baselinePercent: smoothFill(baselineLeadership, 3),
     },
     {
       label: 'Extracurriculars',
@@ -135,31 +145,13 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
           : logs.filter((log) => log.category === 'extracurriculars').length >= 1
             ? 'Developing'
             : 'Needs work',
+      baselinePercent: 0,
     },
     {
       label: 'Letters of Recommendation',
-      percent: smoothFill(
-        logs.filter(
-          (log) =>
-            log.category === 'letters-of-recommendation' &&
-            (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
-        ).length,
-        3
-      ),
-      status:
-        logs.filter(
-          (log) =>
-            log.category === 'letters-of-recommendation' &&
-            (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
-        ).length >= 3
-          ? 'Competitive'
-          : logs.filter(
-                (log) =>
-                  log.category === 'letters-of-recommendation' &&
-                  (log.note?.includes('Status: Confirmed') || log.note?.includes('Status: Received'))
-              ).length >= 1
-            ? 'Developing'
-            : 'Needs work',
+      percent: smoothFill(confirmedLetters, 3),
+      status: confirmedLetters >= 3 ? 'Competitive' : confirmedLetters >= 1 ? 'Developing' : 'Needs work',
+      baselinePercent: 0,
     },
   ] as CategoryBar[];
 }
@@ -282,9 +274,20 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
         </Card>
       ) : null}
 
-      <Card title="Current category bars">
+      <Card>
         {displayCategories.length ? (
           <>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <h3 className="text-lg font-semibold text-slate-900">Current category bars</h3>
+              {storedReport?.score != null ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-700">Score: {storedReport.score}</span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getScoreTier(storedReport.score).classes}`}>
+                    {getScoreTier(storedReport.score).label}
+                  </span>
+                </div>
+              ) : null}
+            </div>
             {storedReport?.summary ? <p className="mb-4 text-sm text-slate-600">{storedReport.summary}</p> : null}
             {baselineReportHref ? (
               <p className="mb-4">
@@ -297,6 +300,13 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
               {displayCategories.map((category) => {
                 const statusClasses = getStatusClasses(category.status);
                 const categoryDefinition = getCategoryDefinitionByLabel(category.label);
+                const baselineFill = category.baselinePercent ?? category.percent;
+                const progressFill = Math.max(0, category.percent - baselineFill);
+                const barColorMap: Record<string, string> = {
+                  'Competitive': '#16a34a',
+                  'Developing': '#d97706',
+                  'Needs work': '#dc2626',
+                };
 
                 return (
                   <Link
@@ -312,7 +322,14 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
                       </span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
-                      <div className={`h-full rounded-full ${statusClasses.fill}`} style={{ width: `${category.percent}%` }} />
+                      {progressFill > 0 ? (
+                        <div style={{ display: 'flex', height: '100%' }}>
+                          <div style={{ width: `${baselineFill}%`, background: 'rgba(100,100,100,0.4)', borderRadius: '4px 0 0 4px' }} />
+                          <div style={{ width: `${progressFill}%`, background: barColorMap[category.status], borderRadius: '0 4px 4px 0' }} />
+                        </div>
+                      ) : (
+                        <div className={`h-full rounded-full ${statusClasses.fill}`} style={{ width: `${category.percent}%` }} />
+                      )}
                     </div>
                   </Link>
                 );
@@ -331,6 +348,16 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-600" />
                 <span>Needs work</span>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: 'rgba(100,100,100,0.4)' }} />
+                <span>Baseline</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-3 rounded-sm bg-blue-500" />
+                <span>Progress added</span>
               </div>
             </div>
           </>
