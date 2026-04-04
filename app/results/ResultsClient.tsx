@@ -402,7 +402,36 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
             {report.tier.label}
           </span>
         </div>
+        {params.schoolYear === 'Freshman' && (
+          <p className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            You&apos;re ahead of the game just by knowing where you stand. Your score will look very different by the time you apply — use this to build smart habits early.
+          </p>
+        )}
+        {params.schoolYear === 'Sophomore' && (
+          <p className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Good time to check in. You still have runway — but clinical hours and research take longer to build than people think. Start now and you won&apos;t be scrambling senior year.
+          </p>
+        )}
+        {params.schoolYear === 'Junior' && (
+          <p className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            This is the window that matters most. Most applicants submit the summer after junior year, which means your score today is close to what adcoms will actually see.
+          </p>
+        )}
+        {params.schoolYear === 'Senior' && (
+          <p className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            If you&apos;re applying this cycle, your profile is mostly set. Double down on your strongest categories and make sure your weakest ones have a story behind them.
+          </p>
+        )}
+        {params.schoolYear === 'Gap Year' && (
+          <p className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            You&apos;ve got more time than a traditional applicant — use it with intention. A focused gap year can move every bar on this page.
+          </p>
+        )}
       </Card>
+
+      <p className="text-center text-sm text-slate-400">
+        This score is built on real AAMC matriculant data — not guesswork. It measures everything that can be measured: your GPA, MCAT, clinical hours, research, and more. What it can&apos;t measure is your story, your letters, or how you interview. Think of it as an honest starting point, not a verdict.
+      </p>
 
       <Card title="Category breakdown">
         <div className="space-y-4">
