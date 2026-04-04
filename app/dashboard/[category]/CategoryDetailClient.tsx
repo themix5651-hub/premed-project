@@ -519,6 +519,28 @@ export default function CategoryDetailClient({ categorySlug }: CategoryDetailCli
                 </div>
               ) : null}
             </div>
+            <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-700" />
+                <span>Strong</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                <span>Competitive</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                <span>Developing</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                <span>Needs Work</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-900" />
+                <span>Critical</span>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
