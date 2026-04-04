@@ -47,9 +47,9 @@ function buildCategory(label: string, percent: number, status: CategoryBar['stat
 function getStatusClasses(status: CategoryBar['status']) {
   if (status === 'Strong') return { fill: 'bg-green-700', text: 'text-green-700' };
   if (status === 'Competitive') return { fill: 'bg-green-500', text: 'text-green-600' };
-  if (status === 'Developing') return { fill: 'bg-yellow-500', text: 'text-yellow-600' };
-  if (status === 'Needs Work') return { fill: 'bg-orange-500', text: 'text-orange-600' };
-  return { fill: 'bg-red-800', text: 'text-red-800' }; // Critical
+  if (status === 'Developing') return { fill: 'bg-amber-400', text: 'text-amber-600' };
+  if (status === 'Needs Work') return { fill: 'bg-red-500', text: 'text-red-500' };
+  return { fill: 'bg-red-900', text: 'text-red-900' }; // Critical
 }
 
 function generateReport(params: SearchParams) {
@@ -64,66 +64,37 @@ function generateReport(params: SearchParams) {
   const mcatStatus = params.mcatStatus ?? 'Planning';
   const mcatScore = toNumber(params.mcatScore);
 
-  let score = 50;
+  // Tier → numeric score mapping
+  const tierScore: Record<string, number> = { Strong: 92, Competitive: 72, Developing: 48, 'Needs Work': 22, Critical: 8 };
 
-  // GPA (Strong ≥3.85, Competitive ≥3.7, Developing ≥3.5, Needs Work ≥3.2, Critical <3.2)
-  if (effectiveGpa >= 3.85) score += 18;
-  else if (effectiveGpa >= 3.7) score += 12;
-  else if (effectiveGpa >= 3.5) score += 4;
-  else if (effectiveGpa >= 3.2) score -= 5;
-  else score -= 12;
+  const gpaTier =
+    effectiveGpa >= 3.85 ? 'Strong' : effectiveGpa >= 3.7 ? 'Competitive' : effectiveGpa >= 3.5 ? 'Developing' : effectiveGpa >= 3.2 ? 'Needs Work' : 'Critical';
+  const mcatTier =
+    mcatStatus !== 'Taken' ? 'Critical' : mcatScore >= 517 ? 'Strong' : mcatScore >= 511 ? 'Competitive' : mcatScore >= 505 ? 'Developing' : mcatScore >= 500 ? 'Needs Work' : 'Critical';
+  const clinicalTier =
+    clinical >= 500 ? 'Strong' : clinical >= 200 ? 'Competitive' : clinical >= 100 ? 'Developing' : clinical >= 50 ? 'Needs Work' : 'Critical';
+  const shadowingTier =
+    shadowing >= 100 ? 'Strong' : shadowing >= 60 ? 'Competitive' : shadowing >= 30 ? 'Developing' : shadowing >= 15 ? 'Needs Work' : 'Critical';
+  const volunteeringTier =
+    volunteering >= 250 ? 'Strong' : volunteering >= 100 ? 'Competitive' : volunteering >= 50 ? 'Developing' : volunteering >= 20 ? 'Needs Work' : 'Critical';
+  const researchTier =
+    research >= 400 ? 'Strong' : research >= 200 ? 'Competitive' : research >= 100 ? 'Developing' : research >= 50 ? 'Needs Work' : 'Critical';
+  const leadershipTier =
+    leadership >= 3 ? 'Strong' : leadership >= 2 ? 'Competitive' : leadership >= 1 ? 'Developing' : 'Critical';
 
-  // MCAT (Strong ≥517, Competitive ≥511, Developing ≥505, Needs Work ≥500, Critical <500)
-  if (mcatStatus === 'Taken') {
-    if (mcatScore >= 517) score += 18;
-    else if (mcatScore >= 511) score += 12;
-    else if (mcatScore >= 505) score += 4;
-    else if (mcatScore >= 500) score -= 5;
-    else score -= 14;
-  } else {
-    score -= 8;
-  }
-
-  // Clinical (Strong ≥500, Competitive ≥200, Developing ≥100, Needs Work ≥50, Critical <50)
-  if (clinical >= 500) score += 14;
-  else if (clinical >= 200) score += 8;
-  else if (clinical >= 100) score += 2;
-  else if (clinical >= 50) score -= 4;
-  else score -= 12;
-
-  // Shadowing (Strong ≥100, Competitive ≥60, Developing ≥30, Needs Work ≥15, Critical <15)
-  if (shadowing >= 100) score += 9;
-  else if (shadowing >= 60) score += 5;
-  else if (shadowing >= 30) score += 2;
-  else if (shadowing >= 15) score -= 3;
-  else score -= 9;
-
-  // Volunteering (Strong ≥250, Competitive ≥100, Developing ≥50, Needs Work ≥20, Critical <20)
-  if (volunteering >= 250) score += 6;
-  else if (volunteering >= 100) score += 3;
-  else if (volunteering >= 50) score += 1;
-  else if (volunteering >= 20) score -= 1;
-  else score -= 4;
-
-  // Research (Strong ≥400, Competitive ≥200, Developing ≥100, Needs Work ≥50, Critical <50)
-  if (research >= 400) score += 7;
-  else if (research >= 200) score += 4;
-  else if (research >= 100) score += 2;
-  else if (research >= 50) score += 0;
-  else score -= 2;
-
-  // Leadership (Strong ≥3, Competitive 2, Developing 1, Critical 0)
-  if (leadership >= 3) score += 5;
-  else if (leadership >= 2) score += 3;
-  else if (leadership >= 1) score += 1;
-  else score -= 5;
-
-  // Compound penalties
-  if (effectiveGpa < 3.5 && clinical < 100) score -= 6;
-  if (clinical < 50 && shadowing < 15) score -= 8;
-  if (research > 200 && clinical < 50) score -= 4;
-
-  score = Math.max(20, Math.min(97, Math.round(score)));
+  // Weights: MCAT 25%, GPA 20%, Clinical 15%, LOR 10%, Research 10%, Shadowing 7%, Service 6%, Leadership 4%, Extracurriculars 3%
+  // LOR and Extracurriculars are not captured at intake so default to Critical (8)
+  const score = Math.round(
+    tierScore[mcatTier] * 0.25 +
+    tierScore[gpaTier] * 0.20 +
+    tierScore[clinicalTier] * 0.15 +
+    8 * 0.10 + // Letters of Recommendation — not in intake
+    tierScore[researchTier] * 0.10 +
+    tierScore[shadowingTier] * 0.07 +
+    tierScore[volunteeringTier] * 0.06 +
+    tierScore[leadershipTier] * 0.04 +
+    8 * 0.03   // Extracurriculars — not in intake
+  );
 
   const strengths: string[] = [];
   const weakSpots: string[] = [];
@@ -235,16 +206,16 @@ function generateReport(params: SearchParams) {
   }
 
   let summary = 'Your application currently reads as early-stage, with several core signals still needing stronger support.';
-  if (score >= 85) summary = 'Your profile reads as strong across the major admissions categories and already looks meaningfully competitive.';
-  else if (score >= 70) summary = 'Your profile is competitive in several important areas, though a few visible gaps still remain.';
-  else if (score >= 55) summary = 'Your application has some credible strengths, but committees would still see clear areas that need more development.';
-  else if (score >= 40) summary = 'Your profile shows some progress, but it still reads as underdeveloped in multiple high-signal categories.';
+  if (score >= 80) summary = 'Your profile reads as strong across the major admissions categories and already looks meaningfully competitive.';
+  else if (score >= 65) summary = 'Your profile is competitive in several important areas, though a few visible gaps still remain.';
+  else if (score >= 45) summary = 'Your application has some credible strengths, but committees would still see clear areas that need more development.';
+  else if (score >= 25) summary = 'Your profile shows some progress, but it still reads as underdeveloped in multiple high-signal categories.';
 
   let signal = 'A high-risk applicant profile that currently signals limited readiness for a strong medical school application cycle.';
-  if (score >= 85) signal = 'A strong applicant who already signals academic readiness, substantive exposure, and credible preparation for applying.';
-  else if (score >= 70) signal = 'A competitive applicant with a believable path to a solid cycle, though some weaknesses are still visible.';
-  else if (score >= 55) signal = 'A building applicant whose profile has real traction, but still leaves meaningful questions about readiness.';
-  else if (score >= 40) signal = 'A developing applicant whose current record still signals uneven preparation across key premed categories.';
+  if (score >= 80) signal = 'A strong applicant who already signals academic readiness, substantive exposure, and credible preparation for applying.';
+  else if (score >= 65) signal = 'A competitive applicant with a believable path to a solid cycle, though some weaknesses are still visible.';
+  else if (score >= 45) signal = 'A developing applicant whose profile has real traction, but still leaves meaningful questions about readiness.';
+  else if (score >= 25) signal = 'A developing applicant whose current record still signals uneven preparation across key premed categories.';
 
   const categories: CategoryBar[] = [
     effectiveGpa >= 3.85
@@ -315,15 +286,15 @@ function generateReport(params: SearchParams) {
   ];
 
   const tier =
-    score >= 85
+    score >= 80
       ? { label: 'Strong', classes: 'bg-green-100 text-green-700' }
-      : score >= 70
+      : score >= 65
         ? { label: 'Competitive', classes: 'bg-green-50 text-green-600' }
-        : score >= 55
-          ? { label: 'Developing', classes: 'bg-yellow-100 text-yellow-700' }
-          : score >= 40
-            ? { label: 'Needs Work', classes: 'bg-orange-100 text-orange-700' }
-            : { label: 'Critical', classes: 'bg-red-100 text-red-800' };
+        : score >= 45
+          ? { label: 'Developing', classes: 'bg-amber-50 text-amber-700' }
+          : score >= 25
+            ? { label: 'Needs Work', classes: 'bg-orange-50 text-red-600' }
+            : { label: 'Critical', classes: 'bg-red-100 text-red-900' };
 
   return {
     score,
@@ -436,15 +407,15 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
             <span>Competitive</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
             <span>Developing</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+            <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
             <span>Needs Work</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-800" />
+            <span className="h-2.5 w-2.5 rounded-full bg-red-900" />
             <span>Critical</span>
           </div>
         </div>

@@ -501,9 +501,9 @@ export default function CategoryDetailClient({ categorySlug }: CategoryDetailCli
                       const barColorMap: Record<string, string> = {
                         'Strong': '#15803d',
                         'Competitive': '#22c55e',
-                        'Developing': '#eab308',
-                        'Needs Work': '#f97316',
-                        'Critical': '#991b1b',
+                        'Developing': '#f59e0b',
+                        'Needs Work': '#ef4444',
+                        'Critical': '#7f1d1d',
                       };
                       if (progressFill > 0) {
                         return (

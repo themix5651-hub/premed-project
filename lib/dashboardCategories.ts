@@ -304,9 +304,9 @@ function buildCategory(label: string, percent: number, status: CategoryStatus): 
 export function getStatusClasses(status: CategoryStatus) {
   if (status === 'Strong') return { fill: 'bg-green-700', text: 'text-green-700' };
   if (status === 'Competitive') return { fill: 'bg-green-500', text: 'text-green-600' };
-  if (status === 'Developing') return { fill: 'bg-yellow-500', text: 'text-yellow-600' };
-  if (status === 'Needs Work') return { fill: 'bg-orange-500', text: 'text-orange-600' };
-  return { fill: 'bg-red-800', text: 'text-red-800' }; // Critical
+  if (status === 'Developing') return { fill: 'bg-amber-400', text: 'text-amber-600' };
+  if (status === 'Needs Work') return { fill: 'bg-red-500', text: 'text-red-500' };
+  return { fill: 'bg-red-900', text: 'text-red-900' }; // Critical
 }
 
 export function buildCategories(params: SearchParamsInput): CategoryBar[] {

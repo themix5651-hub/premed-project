@@ -50,11 +50,11 @@ function smoothFill(total: number, max: number) {
 }
 
 function getScoreTier(score: number) {
-  if (score >= 85) return { label: 'Strong', classes: 'bg-green-100 text-green-700' };
-  if (score >= 70) return { label: 'Competitive', classes: 'bg-green-50 text-green-600' };
-  if (score >= 55) return { label: 'Developing', classes: 'bg-yellow-100 text-yellow-700' };
-  if (score >= 40) return { label: 'Needs Work', classes: 'bg-orange-100 text-orange-700' };
-  return { label: 'Critical', classes: 'bg-red-100 text-red-800' };
+  if (score >= 80) return { label: 'Strong', classes: 'bg-green-100 text-green-700' };
+  if (score >= 65) return { label: 'Competitive', classes: 'bg-green-50 text-green-600' };
+  if (score >= 45) return { label: 'Developing', classes: 'bg-amber-50 text-amber-700' };
+  if (score >= 25) return { label: 'Needs Work', classes: 'bg-orange-50 text-red-600' };
+  return { label: 'Critical', classes: 'bg-red-100 text-red-900' };
 }
 
 function getLatestMcatScore(logs: ActivityLog[]) {
@@ -92,11 +92,13 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
   const gpaPercent =
     gpaStatus === 'Strong' ? 100 : gpaStatus === 'Competitive' ? 82 : gpaStatus === 'Developing' ? 62 : gpaStatus === 'Needs Work' ? 38 : 15;
 
-  const mcatStatus2: CategoryBar['status'] = mcatScore !== null
-    ? (mcatScore >= 517 ? 'Strong' : mcatScore >= 511 ? 'Competitive' : mcatScore >= 505 ? 'Developing' : mcatScore >= 500 ? 'Needs Work' : 'Critical')
-    : 'Critical';
+  const mcatTierStatus: CategoryBar['status'] = mcatStatus !== 'Taken'
+    ? 'Critical'
+    : mcatScore !== null
+      ? (mcatScore >= 517 ? 'Strong' : mcatScore >= 511 ? 'Competitive' : mcatScore >= 505 ? 'Developing' : mcatScore >= 500 ? 'Needs Work' : 'Critical')
+      : 'Critical';
   const mcatPercent =
-    mcatStatus2 === 'Strong' ? 100 : mcatStatus2 === 'Competitive' ? 82 : mcatStatus2 === 'Developing' ? 62 : mcatStatus2 === 'Needs Work' ? 38 : 15;
+    mcatTierStatus === 'Strong' ? 100 : mcatTierStatus === 'Competitive' ? 82 : mcatTierStatus === 'Developing' ? 62 : mcatTierStatus === 'Needs Work' ? 38 : 15;
 
   const confirmedLetters = logs.filter(
     (log) =>
@@ -124,7 +126,7 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
 
   return [
     { label: 'GPA', percent: gpaPercent, status: gpaStatus, baselinePercent: gpaPercent },
-    { label: 'MCAT', percent: mcatPercent, status: mcatStatus2, baselinePercent: mcatPercent },
+    { label: 'MCAT', percent: mcatPercent, status: mcatTierStatus, baselinePercent: mcatPercent },
     {
       label: 'Clinical experience',
       percent: smoothFill(totalClinical, 500),
@@ -319,9 +321,9 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
                 const barColorMap: Record<string, string> = {
                   'Strong': '#15803d',
                   'Competitive': '#22c55e',
-                  'Developing': '#eab308',
-                  'Needs Work': '#f97316',
-                  'Critical': '#991b1b',
+                  'Developing': '#f59e0b',
+                  'Needs Work': '#ef4444',
+                  'Critical': '#7f1d1d',
                 };
 
                 return (
@@ -362,15 +364,15 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
                 <span>Competitive</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                 <span>Developing</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
                 <span>Needs Work</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-800" />
+                <span className="h-2.5 w-2.5 rounded-full bg-red-900" />
                 <span>Critical</span>
               </div>
             </div>
