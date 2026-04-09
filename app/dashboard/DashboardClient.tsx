@@ -287,7 +287,7 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
             {userEmail ? `Signed in as ${userEmail}.` : 'Track your latest report and log progress over time.'}
           </p>
         </div>
-        <Button href="/intake">Create New Report</Button>
+        {!storedReport && <Button href="/intake">Create New Report</Button>}
       </div>
 
       {errorMessage ? (

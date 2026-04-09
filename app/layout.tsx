@@ -59,43 +59,36 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-            <Link href="/" className="text-lg font-bold text-brand-900">
-              My Premed Path
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '0.5px solid #e4e9f0', background: '#f5f7fa' }}>
+          <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 40px', maxWidth: 1152, margin: '0 auto', flexWrap: 'wrap', gap: 12 }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: '#0f1f3d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ width: 7, height: 7, background: '#7eb8e0', borderRadius: '50%' }} />
+              </div>
+              <span style={{ color: '#0f1f3d', fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>My Premed Path</span>
             </Link>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <ul className="flex items-center gap-2 sm:gap-4">
-                {navLinks.filter((link) => !email || link.href !== '/intake').map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+              {navLinks.filter((link) => !email || link.href !== '/intake').map((link) => (
+                <Link key={link.href} href={link.href} style={{ color: '#8a9eb8', fontSize: 13, textDecoration: 'none' }}>
+                  {link.label}
+                </Link>
+              ))}
 
               {email ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">{email}</span>
+                <>
+                  <span style={{ color: '#8a9eb8', fontSize: 13 }}>{email}</span>
                   <button
                     type="button"
                     onClick={handleLogout}
                     disabled={isSigningOut}
-                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{ color: '#0f1f3d', fontSize: 13, textDecoration: 'none', border: '0.5px solid rgba(15,31,61,0.25)', padding: '7px 18px', borderRadius: 9999, fontWeight: 500, background: 'transparent', cursor: 'pointer', opacity: isSigningOut ? 0.6 : 1 }}
                   >
                     {isSigningOut ? 'Logging out...' : 'Logout'}
                   </button>
-                </div>
+                </>
               ) : (
-                <Link
-                  href="/auth"
-                  className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
-                >
+                <Link href="/auth" style={{ color: '#0f1f3d', fontSize: 13, textDecoration: 'none', border: '0.5px solid rgba(15,31,61,0.25)', padding: '7px 18px', borderRadius: 9999, fontWeight: 500 }}>
                   Login
                 </Link>
               )}
