@@ -59,7 +59,8 @@ export default function AuthPage() {
         await supabase.from('profiles').upsert({ id: data.user.id, reports: null }, { onConflict: 'id' });
       }
 
-      setStatusMessage('Check your email to confirm your account.');
+      router.push('/intake');
+      router.refresh();
       setIsSubmitting(false);
       return;
     }

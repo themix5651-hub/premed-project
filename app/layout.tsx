@@ -67,7 +67,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
             <div className="flex flex-wrap items-center gap-3">
               <ul className="flex items-center gap-2 sm:gap-4">
-                {navLinks.map((link) => (
+                {navLinks.filter((link) => !email || link.href !== '/intake').map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
