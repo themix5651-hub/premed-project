@@ -19,6 +19,7 @@ export type SearchParamsInput = {
   lettersOfRec?: string;
   mcatStatus?: string;
   mcatScore?: string;
+  schoolYear?: string;
 };
 
 type IntakeField =
