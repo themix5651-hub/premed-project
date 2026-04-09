@@ -4,35 +4,6 @@ export default function Home() {
   return (
     <main style={{ background: '#f5f7fa', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* NAV */}
-      <nav style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '18px 40px', background: '#f5f7fa',
-        borderBottom: '0.5px solid #e4e9f0', position: 'sticky', top: 0, zIndex: 50
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-          <div style={{
-            width: 22, height: 22, borderRadius: 6, background: '#0f1f3d',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <div style={{ width: 7, height: 7, background: '#7eb8e0', borderRadius: '50%' }} />
-          </div>
-          <span style={{ color: '#0f1f3d', fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>
-            My Premed Path
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
-          <Link href="/" style={{ color: '#8a9eb8', fontSize: 13, textDecoration: 'none' }}>Home</Link>
-          <Link href="/intake" style={{ color: '#8a9eb8', fontSize: 13, textDecoration: 'none' }}>Get My Score</Link>
-          <Link href="/dashboard" style={{ color: '#8a9eb8', fontSize: 13, textDecoration: 'none' }}>Dashboard</Link>
-          <Link href="/auth/login" style={{
-            color: '#0f1f3d', fontSize: 13, textDecoration: 'none',
-            border: '0.5px solid rgba(15,31,61,0.25)', padding: '7px 18px',
-            borderRadius: 9999, fontWeight: 500
-          }}>Login</Link>
-        </div>
-      </nav>
-
       {/* HERO */}
       <section style={{
         background: '#0f1f3d', padding: '80px 40px 88px',
@@ -229,16 +200,6 @@ export default function Home() {
           Get My Free Score →
         </Link>
       </section>
-
-      {/* FOOTER */}
-      <footer style={{
-        background: '#f5f7fa', padding: '20px 40px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderTop: '0.5px solid #dde3ed'
-      }}>
-        <span style={{ fontSize: 12, color: '#a8b8cc' }}>© 2026 My Premed Path</span>
-        <span style={{ fontSize: 12, color: '#a8b8cc' }}>Built by a premed student, for premed students</span>
-      </footer>
 
     </main>
   )
