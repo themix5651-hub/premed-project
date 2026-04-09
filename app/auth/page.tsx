@@ -1,16 +1,17 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { supabase } from '../../lib/supabase';
 
 type AuthMode = 'login' | 'signup';
 
-export default function AuthPage() {
+function AuthForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>('login');
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<AuthMode>(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -138,5 +139,13 @@ export default function AuthPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense>
+      <AuthForm />
+    </Suspense>
   );
 }

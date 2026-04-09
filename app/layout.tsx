@@ -88,8 +88,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   </button>
                 </>
               ) : (
-                <Link href="/auth" style={{ color: '#0f1f3d', fontSize: 13, textDecoration: 'none', border: '0.5px solid rgba(15,31,61,0.25)', padding: '7px 18px', borderRadius: 9999, fontWeight: 500 }}>
-                  Login
+                <Link href="/auth?mode=signup" style={{ color: '#0f1f3d', fontSize: 13, textDecoration: 'none', border: '0.5px solid rgba(15,31,61,0.25)', padding: '7px 18px', borderRadius: 9999, fontWeight: 500 }}>
+                  Sign up
                 </Link>
               )}
             </div>
