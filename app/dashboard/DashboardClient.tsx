@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
 import { supabase } from '../../lib/supabase';
 import {
   CategoryBar,
@@ -50,18 +49,17 @@ function smoothFill(total: number, max: number) {
 }
 
 function getScoreTier(score: number) {
-  if (score >= 80) return { label: 'Strong', classes: 'bg-green-100 text-green-700' };
-  if (score >= 65) return { label: 'Competitive', classes: 'bg-green-50 text-green-600' };
-  if (score >= 45) return { label: 'Developing', classes: 'bg-amber-50 text-amber-700' };
-  if (score >= 25) return { label: 'Needs Work', classes: 'bg-orange-50 text-red-600' };
-  return { label: 'Critical', classes: 'bg-red-100 text-red-900' };
+  if (score >= 80) return { label: 'Strong', color: '#15803d' };
+  if (score >= 65) return { label: 'Competitive', color: '#22c55e' };
+  if (score >= 45) return { label: 'Developing', color: '#f59e0b' };
+  if (score >= 25) return { label: 'Needs Work', color: '#ef4444' };
+  return { label: 'Critical', color: '#7f1d1d' };
 }
 
 function getLatestMcatScore(logs: ActivityLog[]) {
   const latest = logs
     .filter((log) => log.category === 'mcat')
     .sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime())[0];
-
   return latest?.hours ?? null;
 }
 
@@ -121,60 +119,39 @@ function buildDashboardCategories(inputs: SearchParamsInput, logs: ActivityLog[]
     totalResearch >= 400 ? 'Strong' : totalResearch >= 200 ? 'Competitive' : totalResearch >= 100 ? 'Developing' : totalResearch >= 50 ? 'Needs Work' : 'Critical';
   const leadershipStatus: CategoryBar['status'] =
     totalLeadership >= 3 ? 'Strong' : totalLeadership >= 2 ? 'Competitive' : totalLeadership >= 1 ? 'Developing' : 'Critical';
-
   const extracurricularStatus: CategoryBar['status'] =
     totalExtracurriculars >= 4 ? 'Strong' : totalExtracurriculars >= 3 ? 'Competitive' : totalExtracurriculars >= 2 ? 'Developing' : totalExtracurriculars >= 1 ? 'Needs Work' : 'Critical';
-
   const lettersStatus: CategoryBar['status'] =
     confirmedLetters >= 5 ? 'Strong' : confirmedLetters >= 4 ? 'Competitive' : confirmedLetters >= 3 ? 'Developing' : confirmedLetters >= 2 ? 'Needs Work' : 'Critical';
 
   return [
     { label: 'GPA', percent: gpaPercent, status: gpaStatus, baselinePercent: gpaPercent },
     { label: 'MCAT', percent: mcatPercent, status: mcatTierStatus, baselinePercent: mcatPercent },
-    {
-      label: 'Clinical experience',
-      percent: smoothFill(totalClinical, 500),
-      status: clinicalStatus,
-      baselinePercent: smoothFill(baselineClinical, 500),
-    },
-    {
-      label: 'Physician shadowing',
-      percent: smoothFill(totalShadowing, 100),
-      status: shadowingStatus,
-      baselinePercent: smoothFill(baselineShadowing, 100),
-    },
-    {
-      label: 'Community service',
-      percent: smoothFill(totalVolunteering, 250),
-      status: volunteeringStatus,
-      baselinePercent: smoothFill(baselineVolunteering, 250),
-    },
-    {
-      label: 'Research',
-      percent: smoothFill(totalResearch, 400),
-      status: researchStatus,
-      baselinePercent: smoothFill(baselineResearch, 400),
-    },
-    {
-      label: 'Leadership',
-      percent: smoothFill(totalLeadership, 3),
-      status: leadershipStatus,
-      baselinePercent: smoothFill(baselineLeadership, 3),
-    },
-    {
-      label: 'Extracurriculars',
-      percent: smoothFill(totalExtracurriculars, 4),
-      status: extracurricularStatus,
-      baselinePercent: smoothFill(baselineExtracurriculars, 4),
-    },
-    {
-      label: 'Letters of Recommendation',
-      percent: smoothFill(confirmedLetters, 5),
-      status: lettersStatus,
-      baselinePercent: smoothFill(baselineLetters, 5),
-    },
+    { label: 'Clinical experience', percent: smoothFill(totalClinical, 500), status: clinicalStatus, baselinePercent: smoothFill(baselineClinical, 500) },
+    { label: 'Physician shadowing', percent: smoothFill(totalShadowing, 100), status: shadowingStatus, baselinePercent: smoothFill(baselineShadowing, 100) },
+    { label: 'Community service', percent: smoothFill(totalVolunteering, 250), status: volunteeringStatus, baselinePercent: smoothFill(baselineVolunteering, 250) },
+    { label: 'Research', percent: smoothFill(totalResearch, 400), status: researchStatus, baselinePercent: smoothFill(baselineResearch, 400) },
+    { label: 'Leadership', percent: smoothFill(totalLeadership, 3), status: leadershipStatus, baselinePercent: smoothFill(baselineLeadership, 3) },
+    { label: 'Extracurriculars', percent: smoothFill(totalExtracurriculars, 4), status: extracurricularStatus, baselinePercent: smoothFill(baselineExtracurriculars, 4) },
+    { label: 'Letters of Recommendation', percent: smoothFill(confirmedLetters, 5), status: lettersStatus, baselinePercent: smoothFill(baselineLetters, 5) },
   ] as CategoryBar[];
 }
+
+const statusColorMap: Record<string, string> = {
+  'Strong': '#15803d',
+  'Competitive': '#1a5fa8',
+  'Developing': '#d97706',
+  'Needs Work': '#ef4444',
+  'Critical': '#7f1d1d',
+};
+
+const statusTextColorMap: Record<string, string> = {
+  'Strong': '#15803d',
+  'Competitive': '#1a5fa8',
+  'Developing': '#d97706',
+  'Needs Work': '#ef4444',
+  'Critical': '#7f1d1d',
+};
 
 export default function DashboardClient({ searchParams }: DashboardClientProps) {
   const router = useRouter();
@@ -210,193 +187,220 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
   const baselineReportHref = useMemo(() => {
     const inputs = storedReport?.inputs;
     if (!inputs) return '';
-
     const params = new URLSearchParams();
     Object.entries(inputs).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
-
     const query = params.toString();
     return query ? `/results?${query}` : '';
   }, [storedReport]);
 
+  // Compute logged hours per category for progress badges
+  const loggedHours = useMemo(() => ({
+    clinical: activityLogs.filter((l) => l.category === 'clinical-experience').reduce((s, l) => s + (l.hours || 0), 0),
+    shadowing: activityLogs.filter((l) => l.category === 'physician-shadowing').reduce((s, l) => s + (l.hours || 0), 0),
+    volunteering: activityLogs.filter((l) => l.category === 'community-service').reduce((s, l) => s + (l.hours || 0), 0),
+    research: activityLogs.filter((l) => l.category === 'research').reduce((s, l) => s + (l.hours || 0), 0),
+  }), [activityLogs]);
+
+  const loggedHoursMap: Record<string, number> = {
+    'Clinical experience': loggedHours.clinical,
+    'Physician shadowing': loggedHours.shadowing,
+    'Community service': loggedHours.volunteering,
+    'Research': loggedHours.research,
+  };
+
   async function loadDashboardData() {
     setIsLoading(true);
     setErrorMessage('');
-
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.replace('/auth');
-      return;
-    }
-
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace('/auth'); return; }
     setUserEmail(user.email ?? '');
-
     const [{ data: profileData, error: profileError }, { data: activityData, error: activityError }] = await Promise.all([
       supabase.from('profiles').select('reports').eq('id', user.id).maybeSingle(),
       supabase.from('activity_logs').select('id, category, hours, note, logged_at').eq('user_id', user.id),
     ]);
-
-    if (profileError) {
-      setErrorMessage(profileError.message);
-    } else {
-      setStoredReport((profileData?.reports as StoredReport | null) ?? null);
-    }
-
-    if (activityError) {
-      setErrorMessage(activityError.message);
-    } else {
-      setActivityLogs((activityData as ActivityLog[] | null) ?? []);
-    }
-
+    if (profileError) setErrorMessage(profileError.message);
+    else setStoredReport((profileData?.reports as StoredReport | null) ?? null);
+    if (activityError) setErrorMessage(activityError.message);
+    else setActivityLogs((activityData as ActivityLog[] | null) ?? []);
     setIsLoading(false);
   }
 
+  useEffect(() => { loadDashboardData(); }, []);
   useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      loadDashboardData();
-    };
-
+    const handleFocus = () => { loadDashboardData(); };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
+  const schoolYear = storedReport?.inputs?.schoolYear ?? '';
+  const schoolYearMessages: Record<string, string> = {
+    'Freshman': "You're early in your journey — use this as a roadmap, not a verdict.",
+    'Sophomore': "Good time to check in. You still have runway to build strong clinical hours and research.",
+    'Junior': "This is the window that matters most. Your score today is close to what adcoms will actually see.",
+    'Senior': "If you're applying this cycle, what you have now is largely what you'll submit with.",
+    'Gap Year': "You've got more time than a traditional applicant — use it with intention.",
+  };
+  const contextMessage = schoolYearMessages[schoolYear] ?? "Track your progress and log new hours to watch your score grow.";
+
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <Card title="Loading dashboard">
-          <p className="text-sm text-slate-600">Checking your account and recent activity.</p>
-        </Card>
+      <div style={{ background: '#f5f7fa', minHeight: '100vh', padding: '40px 24px' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          <Card title="Loading dashboard">
+            <p className="text-sm text-slate-600">Checking your account and recent activity.</p>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  const score = storedReport?.score;
+  const scoreTier = score != null ? getScoreTier(score) : null;
+
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Your dashboard</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            {userEmail ? `Signed in as ${userEmail}.` : 'Track your latest report and log progress over time.'}
-          </p>
+    <div style={{ background: '#f5f7fa', minHeight: '100vh' }}>
+
+      {/* Hero bar */}
+      <div style={{ background: '#0f1f3d', padding: '28px 32px 32px' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(245,247,250,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>
+                Your readiness
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 500, color: '#f5f7fa', letterSpacing: '-0.02em' }}>
+                Your dashboard
+              </div>
+            </div>
+            {score != null && scoreTier && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(126,184,224,0.1)', border: '0.5px solid rgba(126,184,224,0.2)', padding: '10px 16px', borderRadius: 12 }}>
+                <div style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.03em' }}>
+                  {score}<span style={{ fontSize: 14, color: 'rgba(245,247,250,0.35)' }}>/100</span>
+                </div>
+                <div style={{ background: 'rgba(126,184,224,0.15)', color: '#7eb8e0', fontSize: 11, padding: '4px 10px', borderRadius: 9999, border: '0.5px solid rgba(126,184,224,0.2)' }}>
+                  {scoreTier.label}
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{ background: 'rgba(126,184,224,0.07)', border: '0.5px solid rgba(126,184,224,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'rgba(126,184,224,0.75)', lineHeight: 1.55 }}>
+            {contextMessage}
+          </div>
         </div>
-        {!storedReport && <Button href="/intake">Create New Report</Button>}
       </div>
 
-      {errorMessage ? (
-        <Card title="Dashboard notice">
-          <p className="text-sm text-red-600">{errorMessage}</p>
-        </Card>
-      ) : null}
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 32px' }}>
 
-      <Card>
-        {displayCategories.length ? (
+        {errorMessage && (
+          <div style={{ background: '#fff', border: '0.5px solid #fca5a5', borderRadius: 12, padding: '14px 18px', marginBottom: 16, fontSize: 13, color: '#dc2626' }}>
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Hours at a glance */}
+        {displayCategories.length > 0 && (
           <>
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <h3 className="text-lg font-semibold text-slate-900">Current category bars</h3>
-              {storedReport?.score != null ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-700">Score: {storedReport.score}</span>
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${getScoreTier(storedReport.score).classes}`}>
-                    {getScoreTier(storedReport.score).label}
-                  </span>
+            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>
+              Hours at a glance
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+              {[
+                { label: 'Clinical', baseline: toNumber(storedReport?.inputs?.clinicalHours), logged: loggedHours.clinical },
+                { label: 'Shadowing', baseline: toNumber(storedReport?.inputs?.shadowingHours), logged: loggedHours.shadowing },
+                { label: 'Research', baseline: toNumber(storedReport?.inputs?.researchHours), logged: loggedHours.research },
+                { label: 'Volunteering', baseline: toNumber(storedReport?.inputs?.volunteeringHours), logged: loggedHours.volunteering },
+              ].map((stat) => (
+                <div key={stat.label} style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 12, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, color: '#8a9eb8', marginBottom: 4, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{stat.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 500, color: '#0f1f3d', letterSpacing: '-0.02em' }}>
+                    {stat.baseline + stat.logged}
+                    {stat.logged > 0 && (
+                      <span style={{ fontSize: 13, color: '#1a5fa8', fontWeight: 500, marginLeft: 6 }}>+{stat.logged}</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#8a9eb8', marginTop: 2 }}>hrs logged</div>
                 </div>
-              ) : null}
+              ))}
             </div>
-            {storedReport?.summary ? <p className="mb-4 text-sm text-slate-600">{storedReport.summary}</p> : null}
-            {baselineReportHref ? (
-              <p className="mb-4">
-                <Link href={baselineReportHref} className="text-sm font-medium text-brand-700 transition hover:text-brand-900">
-                  View my baseline report
-                </Link>
-              </p>
-            ) : null}
-            <div className="space-y-4">
-              {displayCategories.map((category) => {
-                const statusClasses = getStatusClasses(category.status);
-                const categoryDefinition = getCategoryDefinitionByLabel(category.label);
-                const baselineFill = category.baselinePercent ?? category.percent;
-                const progressFill = Math.max(0, category.percent - baselineFill);
-                const barColorMap: Record<string, string> = {
-                  'Strong': '#15803d',
-                  'Competitive': '#22c55e',
-                  'Developing': '#f59e0b',
-                  'Needs Work': '#ef4444',
-                  'Critical': '#7f1d1d',
-                };
 
-                return (
-                  <Link
-                    key={category.label}
-                    href={categoryDefinition ? `/dashboard/${categoryDefinition.slug}` : '/dashboard'}
-                    className="block space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium text-slate-700">{category.label}</span>
-                      <span className="flex items-center gap-2">
-                        <span className={`font-medium ${statusClasses.text}`}>{category.status}</span>
-                        <span className="text-slate-400">→</span>
-                      </span>
-                    </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
-                      {progressFill > 0 ? (
-                        <div style={{ display: 'flex', height: '100%' }}>
-                          <div style={{ width: `${baselineFill}%`, background: 'rgba(100,100,100,0.4)', borderRadius: '4px 0 0 4px' }} />
-                          <div style={{ width: `${progressFill}%`, background: barColorMap[category.status], borderRadius: '0 4px 4px 0' }} />
-                        </div>
-                      ) : (
-                        <div className={`h-full rounded-full ${statusClasses.fill}`} style={{ width: `${category.percent}%` }} />
-                      )}
-                    </div>
+            {/* Category bars */}
+            <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>
+              Category breakdown
+            </div>
+            <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '20px 22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>All categories</div>
+                {baselineReportHref && (
+                  <Link href={baselineReportHref} style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none' }}>
+                    View baseline report
                   </Link>
-                );
-              })}
-            </div>
+                )}
+              </div>
 
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-600">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-700" />
-                <span>Strong</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+                {displayCategories.map((category) => {
+                  const categoryDefinition = getCategoryDefinitionByLabel(category.label);
+                  const logged = loggedHoursMap[category.label] ?? 0;
+                  const barColor = statusColorMap[category.status] ?? '#8a9eb8';
+                  const textColor = statusTextColorMap[category.status] ?? '#8a9eb8';
+
+                  return (
+                    <Link
+                      key={category.label}
+                      href={categoryDefinition ? `/dashboard/${categoryDefinition.slug}` : '/dashboard'}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 13, color: '#3a4a5c' }}>{category.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {logged > 0 && (
+                            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, background: '#e6f1fb', color: '#0c447c', fontWeight: 500 }}>
+                              +{logged} hrs
+                            </span>
+                          )}
+                          <span style={{ fontSize: 12, fontWeight: 500, color: textColor }}>{category.status}</span>
+                          <span style={{ fontSize: 12, color: '#c0ccd8' }}>→</span>
+                        </div>
+                      </div>
+                      <div style={{ height: 5, background: '#edf1f7', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${category.percent}%`, background: barColor, borderRadius: 3 }} />
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                <span>Competitive</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                <span>Developing</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                <span>Needs Work</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-900" />
-                <span>Critical</span>
-              </div>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-3 rounded-sm" style={{ background: 'rgba(100,100,100,0.4)' }} />
-                <span>Baseline</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-3 rounded-sm bg-blue-500" />
-                <span>Progress added</span>
+
+              {/* Legend */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 18 }}>
+                {[
+                  { label: 'Strong', color: '#15803d' },
+                  { label: 'Competitive', color: '#1a5fa8' },
+                  { label: 'Developing', color: '#d97706' },
+                  { label: 'Needs Work', color: '#ef4444' },
+                  { label: 'Critical', color: '#7f1d1d' },
+                ].map((item) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#8a9eb8' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: item.color }} />
+                    {item.label}
+                  </div>
+                ))}
               </div>
             </div>
           </>
-        ) : (
-          <p className="text-sm text-slate-600">Generate a report first to see your current category bars here.</p>
         )}
-      </Card>
+
+        {!displayCategories.length && !storedReport && (
+          <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '24px 22px', textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: '#8a9eb8', marginBottom: 16 }}>Generate a report first to see your current category bars here.</p>
+            <Link href="/intake" style={{ display: 'inline-block', background: '#0f1f3d', color: '#f5f7fa', padding: '10px 22px', borderRadius: 9999, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>
+              Get My Score →
+            </Link>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
