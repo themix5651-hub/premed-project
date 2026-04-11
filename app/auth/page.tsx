@@ -2,8 +2,6 @@
 
 import { FormEvent, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
 import { supabase } from '../../lib/supabase';
 
 type AuthMode = 'login' | 'signup';
@@ -14,130 +12,140 @@ function AuthForm() {
   const [mode, setMode] = useState<AuthMode>(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
-
     async function checkUser() {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (user && isMounted) {
-        router.replace('/dashboard');
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && isMounted) router.replace('/dashboard');
     }
-
     checkUser();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
-    setStatusMessage('');
     setErrorMessage('');
 
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
-
-      if (error) {
-        setErrorMessage(error.message);
-        setIsSubmitting(false);
-        return;
-      }
-
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) { setErrorMessage(error.message); setIsSubmitting(false); return; }
       if (data.user) {
         await supabase.from('profiles').upsert({ id: data.user.id, reports: null }, { onConflict: 'id' });
       }
-
       router.push('/intake');
       router.refresh();
       setIsSubmitting(false);
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      setErrorMessage(error.message);
-      setIsSubmitting(false);
-      return;
-    }
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setErrorMessage(error.message); setIsSubmitting(false); return; }
     router.push('/dashboard');
     router.refresh();
     setIsSubmitting(false);
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] w-full max-w-xl items-center px-4 py-10 sm:px-6 lg:px-8">
-      <Card title="Save your readiness score." className="w-full">
-        <p className="mb-4 text-sm text-slate-600">
-          Create a free account to save your report, track your hours over time, and come back anytime to update your stats.
+    <div style={{ background: '#f5f7fa', minHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Hero */}
+      <div style={{ background: '#0f1f3d', padding: '40px 32px 44px', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: 'rgba(126,184,224,0.6)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          Free account
+        </div>
+        <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.02em', lineHeight: 1.25, marginBottom: 8 }}>
+          Save your score.<br />Track your progress.
+        </h1>
+        <p style={{ fontSize: 13, color: 'rgba(245,247,250,0.4)', lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>
+          Create a free account to save your results and log hours over time.
         </p>
-        <ul className="mb-6 space-y-1.5 text-sm text-slate-600">
-          <li>✓ Free forever — no credit card needed</li>
-          <li>✓ Your score and category breakdown saved automatically</li>
-          <li>✓ Log hours over time and watch your application grow</li>
-        </ul>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
-              placeholder="you@example.com"
-              required
-            />
+      </div>
+
+      {/* Form */}
+      <div style={{ padding: '28px 24px 40px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '24px 22px', width: '100%', maxWidth: 420 }}>
+
+          {/* Tab switcher */}
+          <div style={{ display: 'flex', background: '#f5f7fa', border: '0.5px solid #dde3ed', borderRadius: 9999, padding: 3, marginBottom: 22 }}>
+            {(['signup', 'login'] as AuthMode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { setMode(m); setErrorMessage(''); }}
+                style={{
+                  flex: 1, padding: '7px', borderRadius: 9999, fontSize: 13, fontWeight: mode === m ? 500 : 400,
+                  background: mode === m ? '#0f1f3d' : 'transparent',
+                  color: mode === m ? '#f5f7fa' : '#8a9eb8',
+                  border: 'none', cursor: 'pointer'
+                }}
+              >
+                {m === 'signup' ? 'Sign up' : 'Log in'}
+              </button>
+            ))}
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none"
-              placeholder="Minimum 6 characters"
-              minLength={6}
-              required
-            />
-          </div>
+          {/* Benefits — only show on signup */}
+          {mode === 'signup' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {[
+                'Your score and category breakdown saved automatically',
+                'Log clinical hours, shadowing, and research over time',
+                'Watch your bars move as your application grows',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(126,184,224,0.15)', border: '0.5px solid rgba(126,184,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                    <div style={{ width: 5, height: 5, background: '#7eb8e0', borderRadius: '50%' }} />
+                  </div>
+                  <p style={{ fontSize: 12, color: '#5a6b80', lineHeight: 1.5 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
-          {statusMessage ? <p className="text-sm text-green-700">{statusMessage}</p> : null}
-          {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: '#8a9eb8', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>Email</div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                style={{ width: '100%', background: '#f5f7fa', border: '0.5px solid #dde3ed', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#3a4a5c', outline: 'none' }}
+              />
+            </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Button type="submit">{isSubmitting ? 'Please wait...' : mode === 'login' ? 'Login' : 'Sign up'}</Button>
+            <div style={{ marginBottom: 6 }}>
+              <div style={{ fontSize: 11, color: '#8a9eb8', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 6 }}>Password</div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                minLength={6}
+                required
+                style={{ width: '100%', background: '#f5f7fa', border: '0.5px solid #dde3ed', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#3a4a5c', outline: 'none' }}
+              />
+            </div>
+
+            {errorMessage && (
+              <p style={{ fontSize: 12, color: '#dc2626', marginTop: 8, marginBottom: 4 }}>{errorMessage}</p>
+            )}
+
             <button
-              type="button"
-              onClick={() => {
-                setMode(mode === 'login' ? 'signup' : 'login');
-                setStatusMessage('');
-                setErrorMessage('');
-              }}
-              className="text-sm font-medium text-brand-700 transition hover:text-brand-900"
+              type="submit"
+              disabled={isSubmitting}
+              style={{ width: '100%', background: '#0f1f3d', color: '#f5f7fa', border: 'none', borderRadius: 9999, padding: '12px', fontSize: 13, fontWeight: 500, marginTop: 18, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
             >
-              {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Log in'}
+              {isSubmitting ? 'Please wait...' : mode === 'signup' ? 'Create free account →' : 'Log in →'}
             </button>
-          </div>
-        </form>
-      </Card>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
