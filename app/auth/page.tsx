@@ -27,7 +27,7 @@ function AuthForm() {
       } = await supabase.auth.getUser();
 
       if (user && isMounted) {
-        router.replace('/intake');
+        router.replace('/dashboard');
       }
     }
 
@@ -77,7 +77,7 @@ function AuthForm() {
       return;
     }
 
-    router.push('/intake');
+    router.push('/dashboard');
     router.refresh();
     setIsSubmitting(false);
   }
