@@ -69,7 +69,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
-              {navLinks.filter((link) => !email || link.href !== '/intake').map((link) => (
+              {navLinks.filter((link) => !email || (link.href !== '/intake' && link.href !== '/')).map((link) => (
                 <Link key={link.href} href={link.href} style={{ color: '#8a9eb8', fontSize: 13, textDecoration: 'none' }}>
                   {link.label}
                 </Link>
