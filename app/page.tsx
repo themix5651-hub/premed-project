@@ -33,7 +33,7 @@ export default function Home() {
           <span style={{ display: 'block', fontSize: 48, fontWeight: 400, color: '#7eb8e0', fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>med school application stands.</span>
         </h1>
         <p style={{ fontSize: 14, color: 'rgba(245,247,250,0.38)', lineHeight: 1.75, maxWidth: 320, margin: '0 auto 36px' }}>
-          Scored across 9 categories adcoms actually evaluate — built using real data from students who got into med school.
+          Scored across 9 categories adcoms actually evaluate — calibrated against real AAMC matriculant data.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/intake" style={{ background: '#1a5fa8', color: '#f5f7fa', textDecoration: 'none', padding: '14px 32px', borderRadius: 9999, fontSize: 14, fontWeight: 500 }}>
@@ -56,15 +56,15 @@ export default function Home() {
       <div style={{ height: '0.5px', background: 'linear-gradient(90deg, transparent, rgba(15,31,61,0.12), transparent)' }} />
 
       {/* TRACKING SECTION — moved up, first thing after hero */}
-      <section style={{ background: '#0f1f3d', padding: '56px 40px' }}>
+      <section style={{ background: '#f5f7fa', padding: '56px 40px' }}>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
-          <p style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(126,184,224,0.5)', marginBottom: 16 }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#1a5fa8', marginBottom: 16 }}>
             More than a score
           </p>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 30, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.03em', lineHeight: 1.25, marginBottom: 12 }}>
+          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 30, fontWeight: 400, color: '#0f1f3d', letterSpacing: '-0.03em', lineHeight: 1.25, marginBottom: 12 }}>
             Ditch the spreadsheet.
           </h2>
-          <p style={{ fontSize: 14, color: 'rgba(245,247,250,0.45)', lineHeight: 1.75, marginBottom: 28 }}>
+          <p style={{ fontSize: 14, color: '#5a6b80', lineHeight: 1.75, marginBottom: 28 }}>
             Most premeds track clinical hours, shadowing, and research in a notes app or Excel sheet. My Premed Path replaces all of that. Click any category on your dashboard to log hours, track supervisors, and build your activity record — the same information you&apos;ll need on your AMCAS application.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
@@ -75,17 +75,17 @@ export default function Home() {
               { label: 'Always application-ready', sub: 'Your data organized the way AMCAS expects it — no Excel sheet needed' },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(126,184,224,0.15)', border: '0.5px solid rgba(126,184,224,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                  <div style={{ width: 6, height: 6, background: '#7eb8e0', borderRadius: '50%' }} />
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#e6f1fb', border: '0.5px solid #b5d4f4', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                  <div style={{ width: 6, height: 6, background: '#1a5fa8', borderRadius: '50%' }} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: '#f5f7fa', marginBottom: 2 }}>{item.label}</p>
-                  <p style={{ fontSize: 12, color: 'rgba(245,247,250,0.4)', lineHeight: 1.5 }}>{item.sub}</p>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: '#0f1f3d', marginBottom: 2 }}>{item.label}</p>
+                  <p style={{ fontSize: 12, color: '#8a9eb8', lineHeight: 1.5 }}>{item.sub}</p>
                 </div>
               </div>
             ))}
           </div>
-          <Link href="/intake" style={{ display: 'inline-block', background: '#1a5fa8', color: '#f5f7fa', textDecoration: 'none', padding: '13px 26px', borderRadius: 9999, fontSize: 13, fontWeight: 500 }}>
+          <Link href="/intake" style={{ display: 'inline-block', background: '#0f1f3d', color: '#f5f7fa', textDecoration: 'none', padding: '13px 26px', borderRadius: 9999, fontSize: 13, fontWeight: 500 }}>
             Start tracking for free →
           </Link>
         </div>
