@@ -260,7 +260,7 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
             <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>Category breakdown</div>
             <div style={{ display: 'flex', gap: 10 }}>
               <Link href="/dashboard" style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none', padding: '6px 14px', border: '0.5px solid #dde3ed', borderRadius: 9999 }}>Log activity</Link>
-              <Link href="/intake" style={{ fontSize: 12, color: '#0f1f3d', textDecoration: 'none', padding: '6px 14px', background: '#0f1f3d', color: '#f5f7fa', borderRadius: 9999 }}>Edit inputs</Link>
+              <Link href="/intake" style={{ fontSize: 12, color: '#f5f7fa', textDecoration: 'none', padding: '6px 14px', background: '#0f1f3d', borderRadius: 9999 }}>Edit inputs</Link>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
