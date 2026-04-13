@@ -65,7 +65,7 @@ export default function Home() {
             Ditch the spreadsheet.
           </h2>
           <p style={{ fontSize: 14, color: 'rgba(245,247,250,0.45)', lineHeight: 1.75, marginBottom: 28 }}>
-            Most premeds track clinical hours, shadowing, and research in a notes app or Excel sheet. My Premed Path replaces all of that. Click any category on your dashboard to log hours, track supervisors, and build your activity record — the same information you&apos;ll need on your AMCAS application.
+            Most premeds track clinical hours, shadowing, and research in a notes app or Excel sheet. My Premed Path replaces all of that. Click any category on your dashboard to log hours, track supervisors, and build your activity record — the same information you'll need on your AMCAS application.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
             {[
