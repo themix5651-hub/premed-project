@@ -22,29 +22,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     let isMounted = true;
 
     async function loadUser() {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (isMounted) {
-        setEmail(user?.email ?? null);
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (isMounted) setEmail(user?.email ?? null);
     }
 
     loadUser();
 
-    const {
-      data: { subscription }
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        setEmail(session?.user?.email ?? null);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) setEmail(session?.user?.email ?? null);
     });
 
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    return () => { isMounted = false; subscription.unsubscribe(); };
   }, []);
 
   async function handleLogout() {
@@ -61,7 +49,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <header style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '0.5px solid #e4e9f0', background: '#f5f7fa' }}>
           <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 40px', maxWidth: 1152, margin: '0 auto', flexWrap: 'wrap', gap: 12 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+            <Link href={email ? '/dashboard' : '/'} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
               <div style={{ width: 22, height: 22, borderRadius: 6, background: '#0f1f3d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <div style={{ width: 7, height: 7, background: '#7eb8e0', borderRadius: '50%' }} />
               </div>
