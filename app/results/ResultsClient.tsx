@@ -113,14 +113,14 @@ function generateReport(params: SearchParams) {
     else if (mcatScore < 500) { weakSpots.push('The current MCAT score is a meaningful academic concern.'); priorities.push('Rework MCAT preparation'); actionPlan.push('Build a structured retake plan around full-length exams, review cycles, and a realistic target score.'); }
   } else { weakSpots.push('Without a completed MCAT, one major academic checkpoint is still missing from the profile.'); }
 
-  if (effectiveGpa < 3.4 && clinical < 50) { weakSpots.push('Lower GPA combined with very limited clinical exposure creates a compounded readiness problem.'); priorities.push('Address GPA and clinical exposure together'); actionPlan.push('Put academic repair and patient-facing hours ahead of lower-priority resume-building activities.'); }
-  if (clinical < 50 && shadowing < 15) { weakSpots.push('Clinical experience and shadowing are both too limited to show informed commitment to medicine.'); priorities.push('Raise direct medical exposure'); actionPlan.push('Build both clinical hours and shadowing together so the profile gains substance quickly.'); }
-  if (research > 100 && clinical < 50) { weakSpots.push('The profile leans too heavily on research relative to direct patient exposure.'); priorities.push('Rebalance toward patient-facing work'); actionPlan.push('Keep research stable, but shift the next block of effort into consistent clinical experience.'); }
+  if (effectiveGpa < 3.4 && clinical < 50) { weakSpots.push('Lower GPA combined with very limited clinical exposure creates a compounded readiness problem.'); priorities.push('Address GPA and clinical exposure together'); actionPlan.push('Focus on raising your GPA and getting clinical hours before adding anything else to your schedule.'); }
+  if (clinical < 50 && shadowing < 15) { weakSpots.push('Clinical experience and shadowing are both too limited to show informed commitment to medicine.'); priorities.push('Raise direct medical exposure'); actionPlan.push('Start logging both clinical hours and shadowing this month — even a few hours a week adds up quickly.'); }
+  if (research > 100 && clinical < 50) { weakSpots.push('The profile leans too heavily on research relative to direct patient exposure.'); priorities.push('Rebalance toward patient-facing work'); actionPlan.push('You have solid research hours — now focus on building up your clinical hours to balance it out.'); }
 
   const strengthFallbacks = ['You have an early foundation that can become more competitive with consistent execution.', 'Several parts of the profile are moving in the right direction even if the overall picture is still uneven.', 'There is enough momentum here to improve the application meaningfully over the next few months.'];
   const backupWeakSpots = ['No critical weak spots stand out at this stage, but continued consistency still matters.', 'Keep deepening your strongest experiences rather than only adding new ones.', 'Make sure your application narrative clearly connects your preparation to your motivation for medicine.'];
-  const backupPriorities = ['Maintain consistency across your strongest academic and experiential areas.', 'Deepen your most meaningful commitments instead of spreading effort too broadly.', 'Refine how you present your experiences so the application reads as cohesive and intentional.'];
-  const backupActionPlan = ['Keep your current commitments steady and continue tracking progress across each category.', 'Use the next month to deepen one or two high-value activities instead of adding low-yield extras.', 'Start drafting reflection notes so your personal narrative is easier to articulate when you apply.'];
+  const backupPriorities = ['Maintain consistency across your strongest academic and experiential areas.', 'Deepen your most meaningful commitments instead of spreading effort too broadly.', 'Make sure your application tells a clear story about why you want to be a doctor.'];
+  const backupActionPlan = ['Keep your current commitments steady and continue tracking progress across each category.', 'Use the next month to deepen one or two high-value activities instead of adding low-yield extras.', 'Write down why you want to be a doctor and how your experiences connect — this will make your personal statement much easier to write.'];
 
   for (const fallback of strengthFallbacks) { if (strengths.length >= 3) break; if (!strengths.includes(fallback)) strengths.push(fallback); }
   while (weakSpots.length < 3) { weakSpots.push(backupWeakSpots[weakSpots.length]); }
@@ -207,12 +207,17 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
       if (!paramsKey) return;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      const { data: existingProfile } = await supabase.from('profiles').select('reports').eq('id', user.id).maybeSingle();
+      if (existingProfile?.reports) {
+        setSaveMessage('Your existing report is saved in your dashboard.');
+        return;
+      }
       const { error } = await supabase.from('profiles').upsert(
         { id: user.id, reports: { savedAt: new Date().toISOString(), inputs: params, score: report.score, summary: report.summary, signal: report.signal, categories: report.categories } },
         { onConflict: 'id' }
       );
       if (error) { setSaveMessage('We could not save this report to your dashboard yet.'); return; }
-      setSaveMessage('Latest report saved to your dashboard.');
+      setSaveMessage('Report saved to your dashboard.');
     }
     saveReport();
   }, [paramsKey, params, report]);
@@ -260,7 +265,7 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
             <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>Category breakdown</div>
             <div style={{ display: 'flex', gap: 10 }}>
               <Link href="/dashboard" style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none', padding: '6px 14px', border: '0.5px solid #dde3ed', borderRadius: 9999 }}>Log activity</Link>
-              <Link href="/intake" style={{ fontSize: 12, color: '#f5f7fa', textDecoration: 'none', padding: '6px 14px', background: '#0f1f3d', borderRadius: 9999 }}>Edit inputs</Link>
+              <Link href="/intake" style={{ fontSize: 12, color: '#0f1f3d', textDecoration: 'none', padding: '6px 14px', background: '#0f1f3d', color: '#f5f7fa', borderRadius: 9999 }}>Edit inputs</Link>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
