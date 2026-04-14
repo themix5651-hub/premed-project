@@ -44,7 +44,7 @@ export default function Home() {
           </button>
         </div>
         <div style={{ marginTop: 36, display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {['Built using real med school data', 'Built by a premed student', 'Freshman to gap year'].map(t => (
+          {['AAMC matriculant data', 'Built by a premed student', 'Freshman to gap year'].map(t => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <div style={{ width: 5, height: 5, background: '#1a5fa8', borderRadius: '50%' }} />
               <span style={{ fontSize: 11, color: 'rgba(245,247,250,0.28)' }}>{t}</span>
