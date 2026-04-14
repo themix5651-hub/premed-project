@@ -331,7 +331,10 @@ export default function DashboardClient({ searchParams }: DashboardClientProps) 
             </div>
             <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '20px 22px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>All categories</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>All categories</div>
+                  <div style={{ fontSize: 11, color: '#8a9eb8', marginTop: 3 }}>Tap any category to log hours or update your stats</div>
+                </div>
                 {baselineReportHref && (
                   <Link href={baselineReportHref} style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none' }}>
                     View baseline report
