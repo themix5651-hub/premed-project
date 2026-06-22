@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { Button } from '../../components/Button';
 import { supabase } from '../../lib/supabase';
@@ -177,8 +178,40 @@ const schoolYearMessages: Record<string, string> = {
   'Gap Year': "You've got more time than a traditional applicant — use it with intention. A focused gap year can move every bar on this page.",
 };
 
+/* ── Readiness dial: the signature element. Score rendered as a ring that
+   fills to the score and is colored by tier. Replaces the bare number. ── */
+function ReadinessDial({ score, color }: { score: number; color: string }) {
+  const size = 168;
+  const stroke = 12;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(100, score));
+  const offset = c * (1 - clamped / 100);
+  return (
+    <div style={{ position: 'relative', width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(126,184,224,0.14)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)' }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: 52, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.04em', lineHeight: 1 }}>{score}</div>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: 14, color: 'rgba(245,247,250,0.35)' }}>out of 100</div>
+      </div>
+    </div>
+  );
+}
+
+const cardStyle: CSSProperties = { background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 };
+const eyebrowStyle: CSSProperties = { fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 };
+
 export default function ResultsClient({ searchParams }: ResultsClientProps) {
   const [saveMessage, setSaveMessage] = useState('');
+  // null = still checking; controls whether the full report is unlocked.
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
 
   const params = useMemo<SearchParams>(
     () => ({
@@ -202,6 +235,25 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
   const report = useMemo(() => generateReport(params), [params]);
   const paramsKey = JSON.stringify(params);
 
+  // Preserve the current results URL so /auth can send the user straight back
+  // to their unlocked report after they create an account.
+  const resultsQuery = useMemo(() => {
+    const sp = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => { if (v) sp.set(k, String(v)); });
+    return sp.toString();
+  }, [params]);
+  const authHref = `/auth?next=${encodeURIComponent(`/results?${resultsQuery}`)}`;
+
+  useEffect(() => {
+    let active = true;
+    async function check() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (active) setIsAuthed(Boolean(user));
+    }
+    check();
+    return () => { active = false; };
+  }, [paramsKey]);
+
   useEffect(() => {
     async function saveReport() {
       if (!paramsKey) return;
@@ -223,29 +275,116 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
   }, [paramsKey, params, report]);
 
   const contextMessage = params.schoolYear ? schoolYearMessages[params.schoolYear] : null;
+  const unlocked = isAuthed === true;
+  const topWeakSpot = report.weakSpots[0];
+
+  // The detailed, actionable report. Shown in full when unlocked.
+  const detailedReport = (
+    <>
+      {/* Signal */}
+      <div style={cardStyle}>
+        <div style={{ ...eyebrowStyle, marginBottom: 8 }}>What your application currently signals</div>
+        <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.65 }}>{report.signal}</p>
+        {saveMessage && <p style={{ fontSize: 11, color: '#8a9eb8', marginTop: 8 }}>{saveMessage}</p>}
+      </div>
+
+      {/* Strengths */}
+      <div style={cardStyle}>
+        <div style={eyebrowStyle}>Strengths</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {report.strengths.slice(0, 3).map((item) => (
+            <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#15803d', marginTop: 5, flexShrink: 0 }} />
+              <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Weak spots */}
+      <div style={cardStyle}>
+        <div style={eyebrowStyle}>Weak spots</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {report.weakSpots.map((item) => (
+            <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', marginTop: 5, flexShrink: 0 }} />
+              <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Priorities */}
+      <div style={cardStyle}>
+        <div style={eyebrowStyle}>Top 3 priorities</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {report.priorities.map((item, i) => (
+            <div key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#0f1f3d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                <span style={{ fontSize: 10, color: '#7eb8e0', fontWeight: 500 }}>{i + 1}</span>
+              </div>
+              <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Action plan */}
+      <div style={cardStyle}>
+        <div style={eyebrowStyle}>30-day action plan</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {report.actionPlan.map((item) => (
+            <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a5fa8', marginTop: 5, flexShrink: 0 }} />
+              <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Baseline report */}
+      <div style={cardStyle}>
+        <div style={{ ...eyebrowStyle, marginBottom: 4 }}>Your baseline report</div>
+        <p style={{ fontSize: 12, color: '#8a9eb8', marginBottom: 16, lineHeight: 1.5 }}>These are the stats you entered. Your category bars reflect your current totals as you log new activity.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' }}>
+          {[
+            { label: 'GPA', value: params.gpa },
+            { label: 'Science GPA', value: params.scienceGpa },
+            { label: 'MCAT status', value: params.mcatStatus },
+            { label: 'MCAT score', value: params.mcatScore },
+            { label: 'Clinical hours', value: params.clinicalHours },
+            { label: 'Shadowing hours', value: params.shadowingHours },
+            { label: 'Volunteering hours', value: params.volunteeringHours },
+            { label: 'Research hours', value: params.researchHours },
+            { label: 'Leadership count', value: params.leadershipExperiences },
+            { label: 'Extracurriculars', value: params.extracurriculars },
+            { label: 'Letters of Recommendation', value: params.lettersOfRec },
+            { label: 'School year', value: params.schoolYear },
+            { label: 'Target application year', value: params.targetApplicationYear },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <p style={{ fontSize: 11, color: '#8a9eb8', marginBottom: 2 }}>{label}</p>
+              <p style={{ fontSize: 13, color: '#0f1f3d', fontWeight: 500 }}>{value ?? 'N/A'}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div style={{ background: '#f5f7fa', minHeight: '100vh' }}>
 
-      {/* Hero score section */}
-      <div style={{ background: '#0f1f3d', padding: '32px 32px 36px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
-            <div>
-              <div style={{ fontSize: 11, color: 'rgba(245,247,250,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Readiness Score</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: 56, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                  {report.score}
-                </div>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: 'rgba(245,247,250,0.3)', fontWeight: 400 }}>/100</div>
-              </div>
-            </div>
-            <div style={{ background: 'rgba(126,184,224,0.12)', border: '0.5px solid rgba(126,184,224,0.2)', padding: '8px 16px', borderRadius: 9999, color: '#7eb8e0', fontSize: 13, fontWeight: 500, marginTop: 8 }}>
-              {report.tier.label}
-            </div>
+      {/* ── Hero: the readiness dial ── */}
+      <div style={{ background: '#0f1f3d', padding: '40px 32px 44px' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: 'rgba(245,247,250,0.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Your Readiness Score</div>
+          <ReadinessDial score={report.score} color={report.tier.color} />
+          <div style={{ marginTop: 18, background: 'rgba(126,184,224,0.12)', border: '0.5px solid rgba(126,184,224,0.22)', padding: '7px 18px', borderRadius: 9999, color: '#7eb8e0', fontSize: 13, fontWeight: 500 }}>
+            {report.tier.label}
           </div>
           {contextMessage && (
-            <div style={{ background: 'rgba(126,184,224,0.07)', border: '0.5px solid rgba(126,184,224,0.15)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'rgba(126,184,224,0.75)', lineHeight: 1.55 }}>
+            <div style={{ marginTop: 18, maxWidth: 480, fontSize: 13, color: 'rgba(126,184,224,0.8)', lineHeight: 1.6 }}>
               {contextMessage}
             </div>
           )}
@@ -254,17 +393,19 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
 
       <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 32px' }}>
 
-        {/* Disclaimer */}
-        <p style={{ fontSize: 12, color: '#8a9eb8', textAlign: 'center', lineHeight: 1.65, marginBottom: 24 }}>
-          This score is built on real AAMC matriculant data — not guesswork. It measures everything that can be measured: your GPA, MCAT, clinical hours, research, and more. What it can&apos;t measure is your story, your letters, or how you interview. Think of it as an honest starting point, not a verdict.
+        {/* One-line disclaimer */}
+        <p style={{ fontSize: 12, color: '#8a9eb8', textAlign: 'center', lineHeight: 1.6, marginBottom: 22 }}>
+          Built on real AAMC matriculant data — an honest starting point, not a verdict. It can&apos;t measure your story, letters, or interview.
         </p>
 
-        {/* Category breakdown */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '20px 22px', marginBottom: 16 }}>
+        {/* Category breakdown — the visual payoff, shown to everyone */}
+        <div style={{ ...cardStyle, padding: '20px 22px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
             <div style={{ fontSize: 14, fontWeight: 500, color: '#0f1f3d' }}>Category breakdown</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <Link href="/dashboard" style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none', padding: '6px 14px', border: '0.5px solid #dde3ed', borderRadius: 9999 }}>Log activity</Link>
+              {unlocked && (
+                <Link href="/dashboard" style={{ fontSize: 12, color: '#1a5fa8', textDecoration: 'none', padding: '6px 14px', border: '0.5px solid #dde3ed', borderRadius: 9999 }}>Log activity</Link>
+              )}
               <Link href="/intake" style={{ fontSize: 12, color: '#f5f7fa', textDecoration: 'none', padding: '6px 14px', background: '#0f1f3d', borderRadius: 9999 }}>Edit inputs</Link>
             </div>
           </div>
@@ -294,118 +435,57 @@ export default function ResultsClient({ searchParams }: ResultsClientProps) {
           </div>
         </div>
 
-        {/* Signal */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 8 }}>What your application currently signals</div>
-          <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.65 }}>{report.signal}</p>
-          {saveMessage && <p style={{ fontSize: 11, color: '#8a9eb8', marginTop: 8 }}>{saveMessage}</p>}
-        </div>
+        {unlocked ? (
+          // ── Logged in: full report ──
+          detailedReport
+        ) : (
+          // ── Logged out: teaser + gate at the peak ──
+          <>
+            {/* Biggest-gap teaser */}
+            <div style={{ ...cardStyle, borderLeft: '3px solid #ef4444' }}>
+              <div style={{ ...eyebrowStyle, marginBottom: 6 }}>Your biggest gap right now</div>
+              <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{topWeakSpot}</p>
+            </div>
 
-        {/* Strengths */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>Strengths</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {report.strengths.slice(0, 3).map((item) => (
-              <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#15803d', marginTop: 5, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+            {/* The gate — placed at peak motivation */}
+            <div style={{ background: '#0f1f3d', borderRadius: 16, padding: '30px 26px', marginBottom: 16, textAlign: 'center' }}>
+              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 23, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.02em', marginBottom: 10 }}>See exactly how to raise your score.</h2>
+              <p style={{ fontSize: 13, color: 'rgba(245,247,250,0.6)', lineHeight: 1.6, maxWidth: 420, margin: '0 auto 20px' }}>
+                Create a free account to unlock your full breakdown — strengths, every weak spot, your top priorities, and a 30-day action plan. Then track your score as it climbs.
+              </p>
+              <Link href={authHref} style={{ display: 'inline-block', background: '#1a5fa8', color: '#f5f7fa', textDecoration: 'none', padding: '14px 30px', borderRadius: 9999, fontSize: 14, fontWeight: 500 }}>
+                Create Free Account →
+              </Link>
+              <p style={{ fontSize: 11, color: 'rgba(245,247,250,0.4)', marginTop: 12 }}>Free forever. Takes 20 seconds.</p>
+            </div>
 
-        {/* Weak spots */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>Weak spots</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {report.weakSpots.map((item) => (
-              <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', marginTop: 5, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Priorities */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>Top 3 priorities</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {report.priorities.map((item, i) => (
-              <div key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#0f1f3d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                  <span style={{ fontSize: 10, color: '#7eb8e0', fontWeight: 500 }}>{i + 1}</span>
+            {/* Locked preview — the action plan, blurred, to create pull */}
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <div aria-hidden style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.85 }}>
+                <div style={{ ...cardStyle, marginBottom: 0 }}>
+                  <div style={eyebrowStyle}>30-day action plan</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {report.actionPlan.map((item) => (
+                      <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a5fa8', marginTop: 5, flexShrink: 0 }} />
+                        <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Action plan */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 12 }}>30-day action plan</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {report.actionPlan.map((item) => (
-              <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1a5fa8', marginTop: 5, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: '#3a4a5c', lineHeight: 1.6 }}>{item}</p>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(15,31,61,0.92)', color: '#f5f7fa', padding: '9px 18px', borderRadius: 9999, fontSize: 13, fontWeight: 500 }}>
+                  <span aria-hidden>🔒</span> Unlock with a free account
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
 
-        {/* Baseline report */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '18px 22px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 4 }}>Your baseline report</div>
-          <p style={{ fontSize: 12, color: '#8a9eb8', marginBottom: 16, lineHeight: 1.5 }}>These are the stats you entered. Your category bars reflect your current totals as you log new activity.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' }}>
-            {[
-              { label: 'GPA', value: params.gpa },
-              { label: 'Science GPA', value: params.scienceGpa },
-              { label: 'MCAT status', value: params.mcatStatus },
-              { label: 'MCAT score', value: params.mcatScore },
-              { label: 'Clinical hours', value: params.clinicalHours },
-              { label: 'Shadowing hours', value: params.shadowingHours },
-              { label: 'Volunteering hours', value: params.volunteeringHours },
-              { label: 'Research hours', value: params.researchHours },
-              { label: 'Leadership count', value: params.leadershipExperiences },
-              { label: 'Extracurriculars', value: params.extracurriculars },
-              { label: 'Letters of Recommendation', value: params.lettersOfRec },
-              { label: 'School year', value: params.schoolYear },
-              { label: 'Target application year', value: params.targetApplicationYear },
-            ].map(({ label, value }) => (
-              <div key={label}>
-                <p style={{ fontSize: 11, color: '#8a9eb8', marginBottom: 2 }}>{label}</p>
-                <p style={{ fontSize: 13, color: '#0f1f3d', fontWeight: 500 }}>{value ?? 'N/A'}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Save CTA */}
-        <div style={{ background: '#0f1f3d', borderRadius: 16, padding: '28px 24px', marginBottom: 16, textAlign: 'center' }}>
-          <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 400, color: '#f5f7fa', letterSpacing: '-0.02em', marginBottom: 12 }}>Don&apos;t lose your results.</h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, textAlign: 'left', maxWidth: 320, margin: '0 auto 20px' }}>
-            {[
-              'Track progress as you log clinical hours, research, and more',
-              'Watch your category bars move in real time as your application grows',
-              'Come back anytime to update your stats and regenerate your score',
-            ].map(item => (
-              <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7eb8e0', marginTop: 5, flexShrink: 0 }} />
-                <p style={{ fontSize: 13, color: 'rgba(245,247,250,0.6)', lineHeight: 1.5 }}>{item}</p>
-              </div>
-            ))}
-          </div>
-          <Link href="/auth" style={{ display: 'inline-block', background: '#1a5fa8', color: '#f5f7fa', textDecoration: 'none', padding: '13px 28px', borderRadius: 9999, fontSize: 13, fontWeight: 500 }}>
-            Create Free Account →
-          </Link>
-        </div>
-
-        {/* Premium pitch */}
-        <div style={{ background: '#fff', border: '0.5px solid #dde3ed', borderRadius: 14, padding: '22px 22px', marginBottom: 32 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a9eb8', marginBottom: 10 }}>Coming soon</div>
+        {/* Premium pitch — waitlist (kept at the bottom) */}
+        <div style={{ ...cardStyle, padding: '22px 22px', marginTop: 16, marginBottom: 32 }}>
+          <div style={{ ...eyebrowStyle, marginBottom: 10 }}>Coming soon</div>
           <h2 style={{ fontSize: 16, fontWeight: 500, color: '#0f1f3d', marginBottom: 10, letterSpacing: '-0.01em' }}>Want to actually fix your weak spots — not just know about them?</h2>
           <p style={{ fontSize: 13, color: '#5a6b80', lineHeight: 1.7, marginBottom: 16 }}>
             My Premed Path Premium finds real, personalized opportunities based on your exact gaps. If your clinical hours are low, we find clinics near you currently accepting scribes or volunteers — with direct links to apply. Not generic advice. Actual next steps, built for your profile, your location, and your timeline.
